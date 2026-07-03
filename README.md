@@ -1,5 +1,8 @@
 # EvidenceCompare AI
 
+[![CI](https://github.com/andrew-iskander/evidencecompare-ai/actions/workflows/ci.yml/badge.svg)](https://github.com/andrew-iskander/evidencecompare-ai/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+
 > A premium AI medical-evidence intelligence platform that compares **two pharmaceutical
 > molecules** for a **user-defined clinical topic** using only trusted evidence — and
 > produces an interactive, fully-cited, exportable report.

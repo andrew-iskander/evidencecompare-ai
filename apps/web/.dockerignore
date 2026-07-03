@@ -1,0 +1,17 @@
+node_modules
+.next
+out
+build
+.git
+.gitignore
+Dockerfile
+.dockerignore
+npm-debug.log*
+.env
+.env*.local
+e2e/__screenshots__
+test-results
+playwright-report
+playwright/.cache
+*.tsbuildinfo
+README.md

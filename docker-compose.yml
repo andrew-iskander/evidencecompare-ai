@@ -1,0 +1,109 @@
+# EvidenceCompare AI — full local/production-like stack.
+#   docker compose up --build
+# Web → http://localhost:3000 · API → http://localhost:8000 (/docs, /health)
+#
+# Values come from a root .env (see .env.example). Secrets (JWT_SECRET, API keys)
+# MUST be overridden for anything beyond local use.
+
+name: evidencecompare
+
+services:
+  db:
+    image: pgvector/pgvector:pg16
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-evidence}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-evidence}
+      POSTGRES_DB: ${POSTGRES_DB:-evidencecompare}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-evidence} -d ${POSTGRES_DB:-evidencecompare}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+
+  # One-shot: apply Alembic migrations, then exit. api/worker wait for success.
+  migrate:
+    build:
+      context: ./apps/api
+    command: ["alembic", "upgrade", "head"]
+    environment:
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-evidence}:${POSTGRES_PASSWORD:-evidence}@db:5432/${POSTGRES_DB:-evidencecompare}
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: "no"
+
+  api:
+    build:
+      context: ./apps/api
+    environment:
+      ENV: prod
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-evidence}:${POSTGRES_PASSWORD:-evidence}@db:5432/${POSTGRES_DB:-evidencecompare}
+      REDIS_URL: redis://redis:6379/0
+      JWT_SECRET: ${JWT_SECRET:-change-me-in-production}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3000}
+      PIPELINE_MODE: ${PIPELINE_MODE:-celery}
+      EVIDENCE_MODE: ${EVIDENCE_MODE:-auto}
+      LLM_MODE: ${LLM_MODE:-auto}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      VOYAGE_API_KEY: ${VOYAGE_API_KEY:-}
+      NCBI_EMAIL: ${NCBI_EMAIL:-evidencecompare@example.com}
+      NCBI_API_KEY: ${NCBI_API_KEY:-}
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+
+  worker:
+    build:
+      context: ./apps/api
+    command: ["celery", "-A", "app.workers.celery_app:celery_app", "worker", "--loglevel=info"]
+    environment:
+      ENV: prod
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-evidence}:${POSTGRES_PASSWORD:-evidence}@db:5432/${POSTGRES_DB:-evidencecompare}
+      REDIS_URL: redis://redis:6379/0
+      JWT_SECRET: ${JWT_SECRET:-change-me-in-production}
+      PIPELINE_MODE: ${PIPELINE_MODE:-celery}
+      EVIDENCE_MODE: ${EVIDENCE_MODE:-auto}
+      LLM_MODE: ${LLM_MODE:-auto}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      VOYAGE_API_KEY: ${VOYAGE_API_KEY:-}
+      NCBI_EMAIL: ${NCBI_EMAIL:-evidencecompare@example.com}
+      NCBI_API_KEY: ${NCBI_API_KEY:-}
+    depends_on:
+      redis:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+
+  web:
+    build:
+      context: ./apps/web
+      args:
+        # Baked into the browser bundle → must be the host-reachable API URL.
+        NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL:-http://localhost:8000/api/v1}
+    ports:
+      - "3000:3000"
+    depends_on:
+      - api
+
+volumes:
+  pgdata:

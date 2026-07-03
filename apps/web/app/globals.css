@@ -1,0 +1,141 @@
+@import "tailwindcss";
+
+/* Class-based dark mode (next-themes sets .dark on <html>) */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* ---- Design tokens (light) ---- */
+:root {
+  --background: oklch(0.99 0.004 240);
+  --foreground: oklch(0.22 0.02 250);
+
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.22 0.02 250);
+
+  --muted: oklch(0.96 0.006 240);
+  --muted-foreground: oklch(0.5 0.02 250);
+
+  --primary: oklch(0.62 0.13 200);          /* medical teal */
+  --primary-foreground: oklch(0.99 0.01 200);
+
+  --accent: oklch(0.7 0.15 230);            /* clinical blue */
+  --accent-foreground: oklch(0.99 0.01 230);
+
+  --border: oklch(0.9 0.008 240);
+  --input: oklch(0.9 0.008 240);
+  --ring: oklch(0.62 0.13 200);
+
+  /* confidence colors */
+  --conf-high: oklch(0.68 0.15 155);
+  --conf-moderate: oklch(0.75 0.15 90);
+  --conf-low: oklch(0.72 0.16 55);
+  --conf-verylow: oklch(0.62 0.2 25);
+
+  /* evidence-tier sequential ramp — single hue (teal 200), strong→weak.
+     Light mode: strongest evidence is darkest. Dark mode redefines its own
+     monotonic steps (below) rather than flipping automatically. */
+  --tier-meta_analysis: oklch(0.5 0.13 200);
+  --tier-systematic_review: oklch(0.57 0.12 200);
+  --tier-guideline: oklch(0.63 0.11 200);
+  --tier-rct: oklch(0.69 0.1 200);
+  --tier-trial_registry: oklch(0.75 0.08 200);
+  --tier-drug_label: oklch(0.81 0.06 200);
+  --tier-other: oklch(0.86 0.035 200);
+
+  --radius: 0.75rem;
+}
+
+/* ---- Design tokens (dark) ---- */
+.dark {
+  --background: oklch(0.17 0.02 250);
+  --foreground: oklch(0.95 0.01 240);
+
+  --card: oklch(0.21 0.02 250);
+  --card-foreground: oklch(0.95 0.01 240);
+
+  --muted: oklch(0.26 0.02 250);
+  --muted-foreground: oklch(0.68 0.02 245);
+
+  --primary: oklch(0.7 0.13 200);
+  --primary-foreground: oklch(0.17 0.02 250);
+
+  --accent: oklch(0.72 0.14 230);
+  --accent-foreground: oklch(0.17 0.02 250);
+
+  --border: oklch(0.3 0.02 250);
+  --input: oklch(0.3 0.02 250);
+  --ring: oklch(0.7 0.13 200);
+
+  --conf-high: oklch(0.72 0.15 155);
+  --conf-moderate: oklch(0.8 0.15 90);
+  --conf-low: oklch(0.75 0.16 55);
+  --conf-verylow: oklch(0.68 0.2 25);
+
+  /* tier ramp (dark): strongest evidence is lightest, so it reads on the dark surface */
+  --tier-meta_analysis: oklch(0.84 0.13 200);
+  --tier-systematic_review: oklch(0.78 0.12 200);
+  --tier-guideline: oklch(0.72 0.11 200);
+  --tier-rct: oklch(0.66 0.1 200);
+  --tier-trial_registry: oklch(0.6 0.09 200);
+  --tier-drug_label: oklch(0.54 0.07 200);
+  --tier-other: oklch(0.48 0.05 200);
+}
+
+/* ---- Expose tokens to Tailwind utilities ---- */
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-conf-high: var(--conf-high);
+  --color-conf-moderate: var(--conf-moderate);
+  --color-conf-low: var(--conf-low);
+  --color-conf-verylow: var(--conf-verylow);
+
+  --color-tier-meta_analysis: var(--tier-meta_analysis);
+  --color-tier-systematic_review: var(--tier-systematic_review);
+  --color-tier-guideline: var(--tier-guideline);
+  --color-tier-rct: var(--tier-rct);
+  --color-tier-trial_registry: var(--tier-trial_registry);
+  --color-tier-drug_label: var(--tier-drug_label);
+  --color-tier-other: var(--tier-other);
+
+  --radius-lg: var(--radius);
+  --radius-md: calc(var(--radius) - 0.25rem);
+  --radius-sm: calc(var(--radius) - 0.4rem);
+
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
+    Helvetica, Arial, sans-serif;
+}
+
+* {
+  border-color: var(--color-border);
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: var(--color-background);
+  color: var(--color-foreground);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* subtle grid backdrop for hero sections */
+.bg-grid {
+  background-image:
+    linear-gradient(to right, color-mix(in oklch, var(--border) 60%, transparent) 1px, transparent 1px),
+    linear-gradient(to bottom, color-mix(in oklch, var(--border) 60%, transparent) 1px, transparent 1px);
+  background-size: 3rem 3rem;
+}

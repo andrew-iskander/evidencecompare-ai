@@ -1,0 +1,22 @@
+# Render Blueprint — deploys the EvidenceCompare AI API (FastAPI) for free.
+# Use it: render.com -> New + -> Blueprint -> pick this repo. Render reads this
+# file, creates the service, and injects $PORT automatically (the Dockerfile
+# honors it). The web app (Next.js) deploys separately on Vercel — see DEPLOY.md.
+services:
+  - type: web
+    name: evidencecompare-api
+    runtime: docker
+    rootDir: apps/api
+    dockerfilePath: ./Dockerfile
+    plan: free
+    healthCheckPath: /health
+    envVars:
+      # Offline mode: no API keys, no Postgres/Redis needed (SQLite + in-process).
+      - key: EVIDENCE_MODE
+        value: offline
+      - key: LLM_MODE
+        value: offline
+      # Start permissive so the API is reachable before the web URL exists.
+      # After Vercel gives you a URL, set this to that exact origin (DEPLOY.md).
+      - key: CORS_ORIGINS
+        value: "*"

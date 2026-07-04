@@ -24,8 +24,10 @@ USER appuser
 EXPOSE 8000
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=5 \
-    CMD curl -fsS http://localhost:8000/health || exit 1
+    CMD curl -fsS http://localhost:${PORT:-8000}/health || exit 1
 
-# Default: serve the API. The compose `migrate` service overrides this with
-# `alembic upgrade head`, and the `worker` service with the Celery command.
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Default: serve the API. Shell form so ${PORT} (injected by hosts like Render)
+# is honored, falling back to 8000 for local/compose use. The compose `migrate`
+# service overrides this with `alembic upgrade head`, and the `worker` service
+# with the Celery command.
+CMD uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}

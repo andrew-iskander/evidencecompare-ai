@@ -56,6 +56,7 @@ Evidence Ranking · Citation Verification · Report Generation.
 | [API spec](docs/05-api-specification.md) | REST + SSE |
 | [AI workflow](docs/06-ai-workflow.md) | RAG, agents, model tiering |
 | [Phase 0 summary](docs/PHASE0-SUMMARY.md) | Decisions log |
+| [Upgrade summary](docs/UPGRADE-SUMMARY.md) | Dynamic AI engine (U1–U4): orchestrator, caching, transparency |
 | [CLAUDE.md](CLAUDE.md) | Dev/agent guide |
 
 ## Roadmap (phases)
@@ -69,6 +70,13 @@ Evidence Ranking · Citation Verification · Report Generation.
 - **Phase 6 — Testing** ✅ unit, integration, e2e (Playwright), accessibility (axe). ([summary](docs/PHASE6-SUMMARY.md))
 - **Phase 7 — Deployment** ✅ Docker Compose, Alembic migrations, CI/CD. ([summary](docs/PHASE7-SUMMARY.md))
 
+**Upgrade — Dynamic AI Evidence Engine** ✅ ([summary](docs/UPGRADE-SUMMARY.md))
+- **U1** — AI orchestrator coordinating 6 specialist agents + structured trial extraction.
+- **U2** — report caching, manual refresh, and living-evidence (up-to-date / update-available).
+- **U3** — 3-layer AI transparency (Retrieved Evidence / AI Interpretation / Clinical Summary),
+  conflicting-evidence flagging, clinical pearls.
+- **U4** — live-mode enablement (`/health` reports live-readiness; `start-app-live.bat`).
+
 ## Getting started
 
 ### Full stack with Docker
@@ -80,7 +88,10 @@ docker compose up --build  # web:3000, api:8000, worker, postgres+pgvector, redi
 
 Web → http://localhost:3000 · API docs → http://localhost:8000/docs. With no AI keys the
 engine runs fully in **offline mode** (local fixtures + extractive synthesis) — no external
-calls, still end-to-end functional. Add keys and set `LLM_MODE=live` for real Claude/Voyage.
+calls, still end-to-end functional. Add `ANTHROPIC_API_KEY` (and optionally `VOYAGE_API_KEY`,
+`NCBI_API_KEY`) and use `EVIDENCE_MODE=auto LLM_MODE=auto` for genuinely dynamic, Claude-written
+reports over current literature. Confirm at `http://localhost:8000/health` → `modes.llm_live_ready`.
+On Windows, **`start-app.bat`** runs offline and **`start-app-live.bat`** runs live (keys from `apps/api/.env`).
 
 ### Local dev (without Docker)
 
@@ -96,7 +107,7 @@ cd apps/web && npm install && npm run dev
 ### Tests
 
 ```bash
-cd apps/api && pytest                    # 26 backend tests (offline, deterministic)
+cd apps/api && pytest                    # 40 backend tests (offline, deterministic)
 cd apps/web && npm run build && npm run test:e2e   # Playwright e2e + axe accessibility
 ```
 

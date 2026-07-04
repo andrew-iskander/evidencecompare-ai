@@ -38,7 +38,20 @@ def create_app() -> FastAPI:
 
     @app.get("/health", tags=["health"])
     async def health() -> dict:
-        return {"status": "ok", "app": settings.app_name, "env": settings.env}
+        # Report the active engine mode + live-readiness (booleans only, no secrets)
+        # so operators can confirm whether reports are LLM-generated or offline.
+        llm_live_ready = bool(settings.anthropic_api_key) and settings.llm_mode != "offline"
+        return {
+            "status": "ok",
+            "app": settings.app_name,
+            "env": settings.env,
+            "modes": {
+                "evidence_mode": settings.evidence_mode,
+                "llm_mode": settings.llm_mode,
+                "llm_live_ready": llm_live_ready,
+                "embeddings_live_ready": bool(settings.voyage_api_key),
+            },
+        }
 
     app.include_router(api_router)
     return app

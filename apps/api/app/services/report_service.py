@@ -16,6 +16,7 @@ _FULL = (
     selectinload(Report.sections),
     selectinload(Report.comparison_rows),
     selectinload(Report.citations),
+    selectinload(Report.extractions),
     selectinload(Report.agent_runs),
 )
 

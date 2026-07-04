@@ -50,8 +50,14 @@ class OpenFDASource(EvidenceSource):
         )
 
     async def search(
-        self, molecule_a: str, molecule_b: str, topic: str, limit: int
+        self,
+        molecule_a: str,
+        molecule_b: str,
+        topic: str,
+        limit: int,
+        query: str | None = None,
     ) -> list[RawDoc]:
+        # openFDA is queried per-molecule by name; the free-text `query` is n/a here.
         docs: list[RawDoc] = []
         async with httpx.AsyncClient(timeout=get_settings().http_timeout) as client:
             for mol in (molecule_a, molecule_b):

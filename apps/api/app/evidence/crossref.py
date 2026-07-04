@@ -16,9 +16,14 @@ class CrossrefSource(EvidenceSource):
     name = "crossref"
 
     async def search(
-        self, molecule_a: str, molecule_b: str, topic: str, limit: int
+        self,
+        molecule_a: str,
+        molecule_b: str,
+        topic: str,
+        limit: int,
+        query: str | None = None,
     ) -> list[RawDoc]:
-        query = f"{molecule_a} {molecule_b} {topic}"
+        query = query or f"{molecule_a} {molecule_b} {topic}"
         s = get_settings()
         headers = {"User-Agent": f"EvidenceCompare/0.1 (mailto:{s.ncbi_email})"}
         try:

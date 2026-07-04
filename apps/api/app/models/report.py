@@ -57,6 +57,11 @@ class Report(Base):
     citations: Mapped[list[Citation]] = relationship(
         back_populates="report", cascade="all, delete-orphan", order_by="Citation.order_index"
     )
+    extractions: Mapped[list[TrialExtraction]] = relationship(
+        back_populates="report",
+        cascade="all, delete-orphan",
+        order_by="TrialExtraction.order_index",
+    )
     agent_runs: Mapped[list[AgentRun]] = relationship(
         back_populates="report", cascade="all, delete-orphan", order_by="AgentRun.order_index"
     )
@@ -165,6 +170,44 @@ class Citation(Base):
     order_index: Mapped[int] = mapped_column(Integer, default=0)
 
     report: Mapped[Report] = relationship(back_populates="citations")
+
+
+class TrialExtraction(Base):
+    """Structured data extracted from one retrieved study by the Trial-Extraction agent.
+
+    Numeric effect measures are stored as strings to preserve source fidelity
+    (e.g. "HR 0.86 (95% CI 0.74-0.99)"); list-valued fields are JSON. Every row is
+    tied to a verified citation via `ref_key`, so nothing here is uncited.
+    """
+
+    __tablename__ = "trial_extractions"
+
+    id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=uuid.uuid4)
+    report_id: Mapped[uuid.UUID] = mapped_column(
+        Uuid, ForeignKey("reports.id", ondelete="CASCADE"), index=True
+    )
+    doc_id: Mapped[uuid.UUID | None] = mapped_column(
+        Uuid, ForeignKey("evidence_docs.id"), nullable=True
+    )
+    ref_key: Mapped[str] = mapped_column(String(16))  # matches the citation ref_key
+    title: Mapped[str] = mapped_column(Text)
+    study_design: Mapped[str | None] = mapped_column(String(48), nullable=True)
+    population: Mapped[str | None] = mapped_column(Text, nullable=True)
+    intervention: Mapped[str | None] = mapped_column(Text, nullable=True)
+    comparator: Mapped[str | None] = mapped_column(Text, nullable=True)
+    sample_size: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    outcomes: Mapped[list] = mapped_column(JSON, default=list)  # [str]
+    hazard_ratio: Mapped[str | None] = mapped_column(String(128), nullable=True)
+    relative_risk: Mapped[str | None] = mapped_column(String(128), nullable=True)
+    confidence_interval: Mapped[str | None] = mapped_column(String(128), nullable=True)
+    p_value: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    adverse_events: Mapped[list] = mapped_column(JSON, default=list)  # [str]
+    strengths: Mapped[list] = mapped_column(JSON, default=list)  # [str]
+    limitations: Mapped[list] = mapped_column(JSON, default=list)  # [str]
+    extractor_model: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    order_index: Mapped[int] = mapped_column(Integer, default=0)
+
+    report: Mapped[Report] = relationship(back_populates="extractions")
 
 
 class AgentRun(Base):

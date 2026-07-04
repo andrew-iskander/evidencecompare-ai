@@ -4,6 +4,7 @@ import type {
   ComparisonRow,
   Report,
   ReportSection,
+  TrialExtraction,
 } from "@/types/report";
 
 export const API_BASE =
@@ -143,6 +144,24 @@ interface RawCitation {
   year: number | null;
   verified: boolean;
 }
+interface RawExtraction {
+  ref_key: string;
+  title: string;
+  study_design: string | null;
+  population: string | null;
+  intervention: string | null;
+  comparator: string | null;
+  sample_size: number | null;
+  outcomes: string[];
+  hazard_ratio: string | null;
+  relative_risk: string | null;
+  confidence_interval: string | null;
+  p_value: string | null;
+  adverse_events: string[];
+  strengths: string[];
+  limitations: string[];
+  extractor_model: string | null;
+}
 interface RawAgent {
   agent: string;
   label: string;
@@ -164,6 +183,7 @@ export interface RawReport {
   sections: RawSection[];
   comparison: RawRow[];
   citations: RawCitation[];
+  extractions: RawExtraction[];
   agents: RawAgent[];
   molecule_evidence: RawMoleculeEvidence | null;
 }
@@ -205,6 +225,26 @@ export function mapReport(raw: RawReport): Report {
         pmid: c.pmid ?? undefined,
         year: c.year ?? undefined,
         verified: c.verified,
+      }),
+    ),
+    extractions: (raw.extractions ?? []).map(
+      (e): TrialExtraction => ({
+        refKey: e.ref_key,
+        title: e.title,
+        studyDesign: (e.study_design as TrialExtraction["studyDesign"]) ?? undefined,
+        population: e.population ?? undefined,
+        intervention: e.intervention ?? undefined,
+        comparator: e.comparator ?? undefined,
+        sampleSize: e.sample_size ?? undefined,
+        outcomes: e.outcomes ?? [],
+        hazardRatio: e.hazard_ratio ?? undefined,
+        relativeRisk: e.relative_risk ?? undefined,
+        confidenceInterval: e.confidence_interval ?? undefined,
+        pValue: e.p_value ?? undefined,
+        adverseEvents: e.adverse_events ?? [],
+        strengths: e.strengths ?? [],
+        limitations: e.limitations ?? [],
+        extractorModel: e.extractor_model ?? undefined,
       }),
     ),
     moleculeEvidence: raw.molecule_evidence ?? undefined,

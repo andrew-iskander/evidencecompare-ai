@@ -10,13 +10,11 @@ export type ReportStatus = "queued" | "running" | "complete" | "failed";
 
 export type AgentKey =
   | "search"
-  | "guideline"
-  | "trial"
-  | "meta_analysis"
-  | "safety"
   | "ranking"
-  | "verification"
-  | "report";
+  | "extraction"
+  | "guideline"
+  | "comparison"
+  | "writer";
 
 export type AgentState = "pending" | "running" | "done" | "error";
 
@@ -83,6 +81,26 @@ export interface ComparisonRow {
   citationIds: string[];
 }
 
+/** Structured data extracted from one study by the Trial-Extraction agent. */
+export interface TrialExtraction {
+  refKey: string;
+  title: string;
+  studyDesign?: StudyDesign;
+  population?: string;
+  intervention?: string;
+  comparator?: string;
+  sampleSize?: number;
+  outcomes: string[];
+  hazardRatio?: string;
+  relativeRisk?: string;
+  confidenceInterval?: string;
+  pValue?: string;
+  adverseEvents: string[];
+  strengths: string[];
+  limitations: string[];
+  extractorModel?: string;
+}
+
 export interface MoleculeEvidenceSide {
   efficacy: number;
   safety: number;
@@ -103,6 +121,7 @@ export interface Report {
   sections: ReportSection[];
   comparison: ComparisonRow[];
   citations: Citation[];
+  extractions: TrialExtraction[];
   moleculeEvidence?: MoleculeEvidence;
   costUsd?: number;
 }

@@ -29,9 +29,14 @@ class EuropePMCSource(EvidenceSource):
     name = "europepmc"
 
     async def search(
-        self, molecule_a: str, molecule_b: str, topic: str, limit: int
+        self,
+        molecule_a: str,
+        molecule_b: str,
+        topic: str,
+        limit: int,
+        query: str | None = None,
     ) -> list[RawDoc]:
-        query = f'("{molecule_a}" OR "{molecule_b}") AND "{topic}"'
+        query = query or f'("{molecule_a}" OR "{molecule_b}") AND "{topic}"'
         try:
             async with httpx.AsyncClient(timeout=get_settings().http_timeout) as client:
                 r = await client.get(

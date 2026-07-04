@@ -7,14 +7,12 @@ import type { AgentProgress, Report } from "@/types/report";
  */
 
 export const AGENTS: AgentProgress[] = [
-  { key: "search", label: "Search", state: "pending" },
-  { key: "guideline", label: "Guidelines", state: "pending" },
-  { key: "trial", label: "Trials", state: "pending" },
-  { key: "meta_analysis", label: "Meta-analyses", state: "pending" },
-  { key: "safety", label: "Safety", state: "pending" },
-  { key: "ranking", label: "Evidence ranking", state: "pending" },
-  { key: "verification", label: "Citation verification", state: "pending" },
-  { key: "report", label: "Report generation", state: "pending" },
+  { key: "search", label: "Search Agent", state: "pending" },
+  { key: "ranking", label: "Evidence-Ranking Agent", state: "pending" },
+  { key: "extraction", label: "Trial-Extraction Agent", state: "pending" },
+  { key: "guideline", label: "Guideline Agent", state: "pending" },
+  { key: "comparison", label: "Comparison Agent", state: "pending" },
+  { key: "writer", label: "Medical-Writer Agent", state: "pending" },
 ];
 
 export const SAMPLE_REPORT: Report = {
@@ -28,6 +26,46 @@ export const SAMPLE_REPORT: Report = {
     a: { efficacy: 2, safety: 1, guideline: 1 },
     b: { efficacy: 1, safety: 1, guideline: 1 },
   },
+  extractions: [
+    {
+      refKey: "c1",
+      title:
+        "Telmisartan, ramipril, or both in patients at high risk for vascular events (ONTARGET)",
+      studyDesign: "rct",
+      population: "High-risk adults with vascular disease or diabetes",
+      intervention: "Telmisartan",
+      comparator: "Ramipril",
+      sampleSize: 25620,
+      outcomes: ["CV death, MI, stroke, or HF hospitalization"],
+      hazardRatio: "HR 1.01",
+      relativeRisk: undefined,
+      confidenceInterval: "95% CI 0.94-1.09",
+      pValue: "p=0.004 (non-inferiority)",
+      adverseEvents: ["Hypotension", "Syncope"],
+      strengths: ["Randomized design", "Large sample size", "Hard CV outcomes"],
+      limitations: ["Comparator is an ACE inhibitor, not the other ARB"],
+      extractorModel: "sample",
+    },
+    {
+      refKey: "c2",
+      title:
+        "Effects of valsartan on morbidity and mortality in heart failure (Val-HeFT)",
+      studyDesign: "rct",
+      population: "Adults with NYHA II-IV chronic heart failure",
+      intervention: "Valsartan",
+      comparator: "Placebo (on background therapy)",
+      sampleSize: 5010,
+      outcomes: ["All-cause mortality", "Morbidity (HF hospitalization)"],
+      hazardRatio: undefined,
+      relativeRisk: "RR 0.87 (combined endpoint)",
+      confidenceInterval: "95% CI 0.79-0.96",
+      pValue: "p=0.009",
+      adverseEvents: ["Hyperkalemia", "Hypotension", "Renal dysfunction"],
+      strengths: ["Randomized design", "Placebo-controlled"],
+      limitations: ["Heart-failure population differs from ONTARGET"],
+      extractorModel: "sample",
+    },
+  ],
   citations: [
     {
       id: "c1",

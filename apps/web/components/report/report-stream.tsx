@@ -5,6 +5,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { Download, Loader2 } from "lucide-react";
 import { AgentRail } from "@/components/report/agent-rail";
 import { ComparisonTable } from "@/components/report/comparison-table";
+import { TrialDataTable } from "@/components/report/trial-data-table";
 import { EvidenceVisuals } from "@/components/report/evidence-visuals";
 import { SectionCard } from "@/components/report/section-card";
 import { CitationList } from "@/components/report/citation-list";
@@ -137,6 +138,21 @@ export function ReportStream({
               comparison={report.comparison}
               moleculeEvidence={report.moleculeEvidence}
             />
+          )}
+
+          {done && report.extractions.length > 0 && (
+            <section className="space-y-3">
+              <div>
+                <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+                  Extracted trial data
+                </h2>
+                <p className="text-xs text-muted-foreground">
+                  Retrieved evidence — structured fields pulled from each source by
+                  the Trial-Extraction agent. Empty fields read “Not reported”.
+                </p>
+              </div>
+              <TrialDataTable extractions={report.extractions} />
+            </section>
           )}
 
           <section className="space-y-4">

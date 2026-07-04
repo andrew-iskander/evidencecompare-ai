@@ -52,6 +52,27 @@ class CitationOut(BaseModel):
     verified: bool = False
 
 
+class TrialExtractionOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    ref_key: str
+    title: str
+    study_design: str | None = None
+    population: str | None = None
+    intervention: str | None = None
+    comparator: str | None = None
+    sample_size: int | None = None
+    outcomes: list[str] = []
+    hazard_ratio: str | None = None
+    relative_risk: str | None = None
+    confidence_interval: str | None = None
+    p_value: str | None = None
+    adverse_events: list[str] = []
+    strengths: list[str] = []
+    limitations: list[str] = []
+    extractor_model: str | None = None
+
+
 class AgentRunOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
@@ -97,6 +118,7 @@ class ReportOut(BaseModel):
     sections: list[SectionOut] = []
     comparison: list[ComparisonRowOut] = Field(default_factory=list)
     citations: list[CitationOut] = []
+    extractions: list[TrialExtractionOut] = Field(default_factory=list)
     agents: list[AgentRunOut] = Field(default_factory=list)
     molecule_evidence: MoleculeEvidenceOut | None = None
 
@@ -113,6 +135,7 @@ class ReportOut(BaseModel):
             sections=[SectionOut.model_validate(s) for s in report.sections],
             comparison=[ComparisonRowOut.model_validate(r) for r in report.comparison_rows],
             citations=[CitationOut.model_validate(c) for c in report.citations],
+            extractions=[TrialExtractionOut.model_validate(e) for e in report.extractions],
             agents=[AgentRunOut.model_validate(a) for a in report.agent_runs],
             molecule_evidence=(
                 MoleculeEvidenceOut.model_validate(report.molecule_evidence)

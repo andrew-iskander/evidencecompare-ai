@@ -26,10 +26,10 @@ def _live_sources() -> list[EvidenceSource]:
 
 
 async def _run_source(
-    src: EvidenceSource, a: str, b: str, topic: str, limit: int
+    src: EvidenceSource, a: str, b: str, topic: str, limit: int, query: str | None
 ) -> list[RawDoc]:
     try:
-        return await src.search(a, b, topic, limit)
+        return await src.search(a, b, topic, limit, query=query)
     except Exception as exc:  # noqa: BLE001 - isolate a failing source
         log.warning("source %s failed: %s", src.name, exc)
         return []
@@ -51,6 +51,7 @@ async def retrieve_evidence(
     molecule_b: str,
     topic: str,
     sources: list[EvidenceSource] | None = None,
+    query: str | None = None,
 ) -> list[RawDoc]:
     """Retrieve, allowlist-filter, and dedupe candidate evidence.
 
@@ -58,7 +59,8 @@ async def retrieve_evidence(
       - offline: local fixtures only.
       - live: real trusted-source APIs.
       - auto: try live; if it yields nothing (no network), fall back to offline.
-    Tests inject `sources` directly for determinism.
+    `query`, when given, is a Search-agent-optimized free-text query passed to
+    free-text sources. Tests inject `sources` directly for determinism.
     """
     settings = get_settings()
     limit = settings.max_docs_per_source
@@ -71,7 +73,7 @@ async def retrieve_evidence(
         srcs = _live_sources()
 
     results = await asyncio.gather(
-        *(_run_source(s, molecule_a, molecule_b, topic, limit) for s in srcs)
+        *(_run_source(s, molecule_a, molecule_b, topic, limit, query) for s in srcs)
     )
     docs = _dedupe([d for group in results for d in group])
 

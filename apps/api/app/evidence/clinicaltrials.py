@@ -16,9 +16,14 @@ class ClinicalTrialsSource(EvidenceSource):
     name = "clinicaltrials"
 
     async def search(
-        self, molecule_a: str, molecule_b: str, topic: str, limit: int
+        self,
+        molecule_a: str,
+        molecule_b: str,
+        topic: str,
+        limit: int,
+        query: str | None = None,
     ) -> list[RawDoc]:
-        term = f"({molecule_a} OR {molecule_b}) {topic}"
+        term = query or f"({molecule_a} OR {molecule_b}) {topic}"
         try:
             async with httpx.AsyncClient(timeout=get_settings().http_timeout) as client:
                 r = await client.get(

@@ -53,7 +53,15 @@ async def run_pipeline(report_id: uuid.UUID) -> None:
                 runs[key] = run
             await db.commit()
 
-            async def on_progress(agent: str, state: str, detail: str | None = None) -> None:
+            async def on_progress(
+                agent: str,
+                state: str,
+                detail: str | None = None,
+                *,
+                cost: float = 0.0,
+                input_tokens: int = 0,
+                output_tokens: int = 0,
+            ) -> None:
                 run = runs.get(agent)
                 if run is None:
                     return
@@ -63,6 +71,9 @@ async def run_pipeline(report_id: uuid.UUID) -> None:
                 elif state == "done":
                     run.state = "done"
                     run.detail = detail
+                    run.cost_usd = round(cost, 4)
+                    run.input_tokens = input_tokens
+                    run.output_tokens = output_tokens
                     run.ended_at = _now()
                 await db.commit()
                 if delay and state == "running":

@@ -8,6 +8,7 @@ from app.models.report import (
     Export,
     Report,
     ReportSection,
+    TrialExtraction,
 )
 from app.models.user import User
 
@@ -20,6 +21,7 @@ __all__ = [
     "EvidenceDoc",
     "DocChunk",
     "Citation",
+    "TrialExtraction",
     "AgentRun",
     "Export",
 ]

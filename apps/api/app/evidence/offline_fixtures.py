@@ -13,7 +13,12 @@ class OfflineSource(EvidenceSource):
     name = "offline"
 
     async def search(
-        self, molecule_a: str, molecule_b: str, topic: str, limit: int
+        self,
+        molecule_a: str,
+        molecule_b: str,
+        topic: str,
+        limit: int,
+        query: str | None = None,
     ) -> list[RawDoc]:
         a, b, t = molecule_a, molecule_b, topic
         docs = [
@@ -23,8 +28,11 @@ class OfflineSource(EvidenceSource):
                 pmid="30000001",
                 doi="10.0000/offline.a.rct",
                 abstract=(
-                    f"A randomized controlled trial evaluating {a} in the context of {t}. "
-                    f"Primary and secondary endpoints relevant to {t} were assessed."
+                    f"A randomized, double-blind, placebo-controlled trial evaluating {a} "
+                    f"in the context of {t}. Adults with the target condition were randomized "
+                    f"to {a} versus placebo. For the primary composite endpoint the hazard "
+                    f"ratio was HR 0.86 (95% CI 0.75-0.98; p=0.03) favoring {a}. "
+                    f"The most common adverse events were hypotension and dizziness."
                 ),
                 study_design="rct",
                 publication_year=2019,
@@ -37,7 +45,11 @@ class OfflineSource(EvidenceSource):
                 pmid="30000002",
                 doi="10.0000/offline.b.rct",
                 abstract=(
-                    f"A randomized controlled trial evaluating {b} in the context of {t}."
+                    f"A randomized, active-controlled trial evaluating {b} in the context "
+                    f"of {t}. Participants received {b} or standard of care. The primary "
+                    f"outcome relative risk was RR 0.91 (95% CI 0.82-1.01; p=0.08), "
+                    f"a non-significant trend. Reported adverse events included "
+                    f"hyperkalemia and headache."
                 ),
                 study_design="rct",
                 publication_year=2020,

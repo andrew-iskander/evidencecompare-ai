@@ -55,6 +55,14 @@ class EvidenceSource:
     name: str = "base"
 
     async def search(
-        self, molecule_a: str, molecule_b: str, topic: str, limit: int
+        self,
+        molecule_a: str,
+        molecule_b: str,
+        topic: str,
+        limit: int,
+        query: str | None = None,
     ) -> list[RawDoc]:  # pragma: no cover - interface
+        """Retrieve candidate docs. `query`, when given, is a Search-agent-optimized
+        free-text query string that free-text sources should use in place of their
+        default term; sources that cannot use it may ignore it."""
         raise NotImplementedError

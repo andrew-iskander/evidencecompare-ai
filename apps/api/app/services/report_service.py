@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import secrets
 import uuid
+from datetime import UTC, datetime, timedelta
 
 from fastapi import HTTPException, status
 from sqlalchemy import select
@@ -11,6 +12,15 @@ from sqlalchemy.orm import selectinload
 from app.models.report import Report
 from app.models.user import User
 from app.schemas.report import ReportCreateIn
+
+
+def normalize_query_key(molecule_a: str, molecule_b: str, topic: str) -> str:
+    """Case/whitespace-insensitive cache key. A/B order is preserved (it drives
+    the report's column assignment), so 'A vs B' and 'B vs A' are distinct."""
+    def norm(s: str) -> str:
+        return " ".join(s.lower().split())
+
+    return f"{norm(molecule_a)}|{norm(molecule_b)}|{norm(topic)}"
 
 _FULL = (
     selectinload(Report.sections),
@@ -27,13 +37,33 @@ async def create_report(db: AsyncSession, user: User, data: ReportCreateIn) -> R
         molecule_a=data.molecule_a,
         molecule_b=data.molecule_b,
         topic=data.topic,
+        query_key=normalize_query_key(data.molecule_a, data.molecule_b, data.topic),
         inputs=data.options,
         status="queued",
+        freshness="unknown",
     )
     db.add(report)
     await db.commit()
     await db.refresh(report)
     return report
+
+
+async def find_cached_report(
+    db: AsyncSession, user: User, query_key: str, ttl_hours: int
+) -> Report | None:
+    """Most recent COMPLETE report for this user + query within the cache window."""
+    cutoff = datetime.now(UTC) - timedelta(hours=ttl_hours)
+    return await db.scalar(
+        select(Report)
+        .where(
+            Report.user_id == user.id,
+            Report.query_key == query_key,
+            Report.status == "complete",
+            Report.created_at >= cutoff,
+        )
+        .order_by(Report.created_at.desc())
+        .options(*_FULL)
+    )
 
 
 async def get_report_full(db: AsyncSession, report_id: uuid.UUID) -> Report | None:

@@ -146,10 +146,12 @@ async def run_engine(
         )
     await db.commit()
 
-    # 5. Provenance.
+    # 5. Provenance + living-evidence fingerprint.
     report.molecule_evidence = state.molecule_evidence
     report.model_synthesis = state.synthesis_model
     report.prompt_version = "orchestrator-v1"
+    report.evidence_fingerprint = sorted({d.dedup_key() for d in state.raw_docs})
+    report.freshness = "up_to_date"
     report.source_snapshot = {
         "evidence_mode": settings.evidence_mode,
         "llm_mode": settings.llm_mode,

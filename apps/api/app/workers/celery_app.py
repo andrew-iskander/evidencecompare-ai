@@ -17,4 +17,12 @@ celery_app.conf.update(
     accept_content=["json"],
     timezone="UTC",
     enable_utc=True,
+    # Living evidence: sweep complete reports for newer evidence daily.
+    # Runs only when a Celery beat scheduler is started (`celery ... beat`).
+    beat_schedule={
+        "living-evidence-daily-scan": {
+            "task": "scan_stale_reports",
+            "schedule": 24 * 60 * 60.0,
+        }
+    },
 )

@@ -10,11 +10,18 @@ from fastapi.responses import Response, StreamingResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_current_user, user_from_query_token
+from app.core.config import get_settings
 from app.db.session import AsyncSessionLocal, get_db
 from app.models.user import User
 from app.pipeline.orchestrator import dispatch_pipeline
-from app.schemas.report import ReportOut, ReportSummary, ShareOut
-from app.services import report_service
+from app.schemas.report import (
+    FreshnessOut,
+    ReportCreateIn,
+    ReportOut,
+    ReportSummary,
+    ShareOut,
+)
+from app.services import freshness_service, report_service
 
 router = APIRouter(prefix="/reports", tags=["reports"])
 
@@ -23,19 +30,66 @@ def _sse(event: str, data: dict) -> str:
     return f"event: {event}\ndata: {json.dumps(data)}\n\n"
 
 
+async def _start_report(db: AsyncSession, user: User, data: ReportCreateIn) -> ReportOut:
+    report = await report_service.create_report(db, user, data)
+    await dispatch_pipeline(report.id)
+    fresh = await report_service.get_report_full(db, report.id)
+    return ReportOut.from_report(fresh)
+
+
 @router.post("", response_model=ReportOut, status_code=status.HTTP_202_ACCEPTED)
 async def create_report(
     body: dict,
     db: AsyncSession = Depends(get_db),
     user: User = Depends(get_current_user),
 ) -> ReportOut:
-    from app.schemas.report import ReportCreateIn
-
     data = ReportCreateIn.model_validate(body)
-    report = await report_service.create_report(db, user, data)
-    await dispatch_pipeline(report.id)
-    fresh = await report_service.get_report_full(db, report.id)
-    return ReportOut.from_report(fresh)
+
+    # Cache: reuse a recent complete report for the same query unless refresh=true.
+    if not data.refresh:
+        ttl = get_settings().report_cache_ttl_hours
+        key = report_service.normalize_query_key(
+            data.molecule_a, data.molecule_b, data.topic
+        )
+        cached = await report_service.find_cached_report(db, user, key, ttl)
+        if cached is not None:
+            return ReportOut.from_report(cached, cached=True)
+
+    return await _start_report(db, user, data)
+
+
+@router.post(
+    "/{report_id}/refresh",
+    response_model=ReportOut,
+    status_code=status.HTTP_202_ACCEPTED,
+)
+async def refresh_report(
+    report_id: uuid.UUID,
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(get_current_user),
+) -> ReportOut:
+    """Manual refresh: run a fresh evidence report from the same inputs."""
+    src = await report_service.get_owned_report(db, report_id, user)
+    data = ReportCreateIn(
+        molecule_a=src.molecule_a,
+        molecule_b=src.molecule_b,
+        topic=src.topic,
+        options=src.inputs or {},
+        refresh=True,
+    )
+    return await _start_report(db, user, data)
+
+
+@router.post("/{report_id}/check-updates", response_model=FreshnessOut)
+async def check_updates(
+    report_id: uuid.UUID,
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(get_current_user),
+) -> FreshnessOut:
+    """Living evidence: detect newer high-tier evidence since this report ran."""
+    report = await report_service.get_owned_report(db, report_id, user)
+    result = await freshness_service.check_updates(db, report)
+    return FreshnessOut(**result)
 
 
 @router.get("", response_model=list[ReportSummary])

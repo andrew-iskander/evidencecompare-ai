@@ -48,5 +48,19 @@ test.describe("authenticated live flow", () => {
     // Charts and a verified citation are present.
     await expect(page.getByRole("heading", { name: "Evidence pyramid" })).toBeVisible();
     await expect(page.getByText(/verified citation/)).toBeVisible();
+
+    // U1: the six-agent pipeline + structured trial extraction render.
+    await expect(
+      page.getByText("Trial-Extraction Agent", { exact: true }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: "Extracted trial data" }),
+    ).toBeVisible();
+
+    // U2: living-evidence controls render on the completed report.
+    await expect(page.getByText("Up to date")).toBeVisible();
+    await expect(
+      page.getByRole("button", { name: /Refresh evidence/i }),
+    ).toBeVisible();
   });
 });

@@ -22,6 +22,7 @@ export const SAMPLE_REPORT: Report = {
   moleculeB: "Valsartan",
   topic: "Cardioprotection",
   costUsd: 0.42,
+  freshness: "up_to_date",
   moleculeEvidence: {
     a: { efficacy: 2, safety: 1, guideline: 1 },
     b: { efficacy: 1, safety: 1, guideline: 1 },

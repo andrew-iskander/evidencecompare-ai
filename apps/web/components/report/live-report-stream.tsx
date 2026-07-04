@@ -5,6 +5,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { AlertTriangle, Download, Loader2 } from "lucide-react";
 import { AgentRail } from "@/components/report/agent-rail";
 import { ComparisonTable } from "@/components/report/comparison-table";
+import { FreshnessBar } from "@/components/report/freshness-bar";
 import { TrialDataTable } from "@/components/report/trial-data-table";
 import { EvidenceVisuals } from "@/components/report/evidence-visuals";
 import { SectionCard } from "@/components/report/section-card";
@@ -157,6 +158,9 @@ export function LiveReportStream({ id }: { id: string }) {
         <div className="space-y-6">
           {report ? (
             <>
+              {done && (
+                <FreshnessBar reportId={report.id} initial={report.freshness} />
+              )}
               <section className="space-y-3">
                 <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
                   Side-by-side comparison

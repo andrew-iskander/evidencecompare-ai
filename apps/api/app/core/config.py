@@ -34,6 +34,12 @@ class Settings(BaseSettings):
     pipeline_mode: str = "background"  # background | eager | celery
     pipeline_step_delay: float = 0.5
 
+    # Report caching + living evidence.
+    # Reuse a complete report for the same query within this window (hours).
+    report_cache_ttl_hours: int = 168
+    # Periodic living-evidence sweep re-checks complete reports older than this (hours).
+    freshness_stale_hours: int = 168
+
     # Evidence engine (Phase 3)
     evidence_mode: str = "auto"  # auto | live | offline
     llm_mode: str = "auto"  # auto | live | offline

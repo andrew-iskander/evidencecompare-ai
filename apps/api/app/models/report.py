@@ -33,8 +33,17 @@ class Report(Base):
     molecule_a: Mapped[str] = mapped_column(String(255))
     molecule_b: Mapped[str] = mapped_column(String(255))
     topic: Mapped[str] = mapped_column(String(512))
+    # Normalized cache key "a|b|topic" for reuse + living-evidence grouping.
+    query_key: Mapped[str | None] = mapped_column(String(1024), nullable=True, index=True)
     status: Mapped[str] = mapped_column(String(32), default="queued", index=True)
     inputs: Mapped[dict] = mapped_column(JSON, default=dict)
+    # Living evidence: up_to_date | update_available | unknown, plus the retrieval
+    # fingerprint (dedup keys of candidates) used to detect newer evidence.
+    freshness: Mapped[str] = mapped_column(String(24), default="unknown")
+    freshness_checked_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    evidence_fingerprint: Mapped[list] = mapped_column(JSON, default=list)
     model_synthesis: Mapped[str | None] = mapped_column(String(64), nullable=True)
     prompt_version: Mapped[str | None] = mapped_column(String(32), nullable=True)
     source_snapshot: Mapped[dict | None] = mapped_column(JSON, nullable=True)

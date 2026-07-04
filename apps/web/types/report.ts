@@ -8,6 +8,8 @@ export type Confidence = "high" | "moderate" | "low" | "very_low";
 
 export type ReportStatus = "queued" | "running" | "complete" | "failed";
 
+export type Freshness = "up_to_date" | "update_available" | "unknown";
+
 export type AgentKey =
   | "search"
   | "ranking"
@@ -124,4 +126,15 @@ export interface Report {
   extractions: TrialExtraction[];
   moleculeEvidence?: MoleculeEvidence;
   costUsd?: number;
+  freshness: Freshness;
+  freshnessCheckedAt?: string;
+  cached?: boolean;
+}
+
+/** Result of a living-evidence check. */
+export interface FreshnessResult {
+  status: Freshness;
+  newItems: number;
+  checkedAt?: string;
+  details: string[];
 }

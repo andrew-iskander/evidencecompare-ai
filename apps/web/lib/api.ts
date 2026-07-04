@@ -2,6 +2,8 @@ import type {
   AgentProgress,
   Citation,
   ComparisonRow,
+  Freshness,
+  FreshnessResult,
   Report,
   ReportSection,
   TrialExtraction,
@@ -180,6 +182,9 @@ export interface RawReport {
   topic: string;
   model_synthesis: string | null;
   cost_usd: number;
+  freshness: Freshness;
+  freshness_checked_at: string | null;
+  cached: boolean;
   sections: RawSection[];
   comparison: RawRow[];
   citations: RawCitation[];
@@ -248,6 +253,9 @@ export function mapReport(raw: RawReport): Report {
       }),
     ),
     moleculeEvidence: raw.molecule_evidence ?? undefined,
+    freshness: raw.freshness ?? "unknown",
+    freshnessCheckedAt: raw.freshness_checked_at ?? undefined,
+    cached: raw.cached ?? false,
   };
 }
 
@@ -294,6 +302,28 @@ export const reportsApi = {
   },
   async list(): Promise<ReportSummary[]> {
     return apiFetch<ReportSummary[]>("/reports");
+  },
+  // Manual refresh: run a fresh evidence report from the same inputs.
+  async refresh(id: string): Promise<Report> {
+    const raw = await apiFetch<RawReport>(`/reports/${id}/refresh`, {
+      method: "POST",
+    });
+    return mapReport(raw);
+  },
+  // Living evidence: ask the backend to look for newer high-tier evidence.
+  async checkUpdates(id: string): Promise<FreshnessResult> {
+    const raw = await apiFetch<{
+      status: Freshness;
+      new_items: number;
+      checked_at: string | null;
+      details: string[];
+    }>(`/reports/${id}/check-updates`, { method: "POST" });
+    return {
+      status: raw.status,
+      newItems: raw.new_items,
+      checkedAt: raw.checked_at ?? undefined,
+      details: raw.details,
+    };
   },
   async remove(id: string): Promise<void> {
     await apiFetch<void>(`/reports/${id}`, { method: "DELETE" });

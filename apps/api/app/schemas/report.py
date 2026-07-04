@@ -11,6 +11,15 @@ class ReportCreateIn(BaseModel):
     molecule_b: str = Field(min_length=1, max_length=255)
     topic: str = Field(min_length=1, max_length=512)
     options: dict = Field(default_factory=dict)
+    # When true, bypass the cache and force a fresh evidence run.
+    refresh: bool = False
+
+
+class FreshnessOut(BaseModel):
+    status: str  # up_to_date | update_available | unknown
+    new_items: int = 0
+    checked_at: datetime | None = None
+    details: list[str] = []
 
 
 class ClaimOut(BaseModel):
@@ -115,6 +124,9 @@ class ReportOut(BaseModel):
     topic: str
     model_synthesis: str | None = None
     cost_usd: float = 0
+    freshness: str = "unknown"
+    freshness_checked_at: datetime | None = None
+    cached: bool = False
     sections: list[SectionOut] = []
     comparison: list[ComparisonRowOut] = Field(default_factory=list)
     citations: list[CitationOut] = []
@@ -123,7 +135,7 @@ class ReportOut(BaseModel):
     molecule_evidence: MoleculeEvidenceOut | None = None
 
     @classmethod
-    def from_report(cls, report) -> ReportOut:
+    def from_report(cls, report, cached: bool = False) -> ReportOut:
         return cls(
             id=report.id,
             status=report.status,
@@ -132,6 +144,9 @@ class ReportOut(BaseModel):
             topic=report.topic,
             model_synthesis=report.model_synthesis,
             cost_usd=float(report.token_cost_usd or 0),
+            freshness=report.freshness or "unknown",
+            freshness_checked_at=report.freshness_checked_at,
+            cached=cached,
             sections=[SectionOut.model_validate(s) for s in report.sections],
             comparison=[ComparisonRowOut.model_validate(r) for r in report.comparison_rows],
             citations=[CitationOut.model_validate(c) for c in report.citations],

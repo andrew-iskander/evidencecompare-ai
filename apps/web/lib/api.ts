@@ -332,6 +332,29 @@ export const reportsApi = {
   async remove(id: string): Promise<void> {
     await apiFetch<void>(`/reports/${id}`, { method: "DELETE" });
   },
+  // Download a report as pdf | pptx | xlsx | markdown (fetch with auth → save blob).
+  async download(
+    id: string,
+    format: "pdf" | "pptx" | "xlsx" | "markdown",
+  ): Promise<void> {
+    const access = tokens.access();
+    const res = await fetch(`${API_BASE}/reports/${id}/download?format=${format}`, {
+      headers: access ? { Authorization: `Bearer ${access}` } : {},
+    });
+    if (!res.ok) throw new ApiError(res.status, await parseError(res));
+    const blob = await res.blob();
+    const cd = res.headers.get("Content-Disposition") ?? "";
+    const match = /filename="?([^"]+)"?/.exec(cd);
+    const filename = match?.[1] ?? `report.${format === "markdown" ? "md" : format}`;
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  },
   streamUrl(id: string): string {
     const token = tokens.access() ?? "";
     return `${API_BASE}/reports/${id}/stream?token=${encodeURIComponent(token)}`;

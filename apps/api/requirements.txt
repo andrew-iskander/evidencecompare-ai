@@ -14,3 +14,7 @@ celery[redis]>=5.4
 redis>=5.2
 alembic>=1.14
 python-dotenv>=1.0
+# Document exports (PDF / Excel / PowerPoint). Pure-Python, no system deps.
+fpdf2>=2.8
+openpyxl>=3.1
+python-pptx>=1.0

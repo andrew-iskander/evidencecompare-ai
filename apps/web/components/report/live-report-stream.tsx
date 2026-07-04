@@ -2,17 +2,11 @@
 
 import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import {
-  AlertTriangle,
-  Database,
-  Download,
-  Loader2,
-  Sparkles,
-  Stethoscope,
-} from "lucide-react";
+import { AlertTriangle, Loader2, Database, Sparkles, Stethoscope } from "lucide-react";
 import { AgentRail } from "@/components/report/agent-rail";
 import { ComparisonTable } from "@/components/report/comparison-table";
 import { FreshnessBar } from "@/components/report/freshness-bar";
+import { ExportButtons } from "@/components/report/export-buttons";
 import { TrialDataTable } from "@/components/report/trial-data-table";
 import { EvidenceVisuals } from "@/components/report/evidence-visuals";
 import { SectionCard } from "@/components/report/section-card";
@@ -21,14 +15,11 @@ import {
   TransparencyLayer,
 } from "@/components/report/transparency-layer";
 import { CitationList } from "@/components/report/citation-list";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { AGENTS } from "@/lib/placeholder-data";
 import { mapAgents, mapReport, reportsApi } from "@/lib/api";
 import type { AgentProgress, Report } from "@/types/report";
-
-const EXPORTS = ["PDF", "PPTX", "Excel", "Markdown"] as const;
 
 export function LiveReportStream({ id }: { id: string }) {
   const [report, setReport] = useState<Report | null>(null);
@@ -142,14 +133,7 @@ export function LiveReportStream({ id }: { id: string }) {
             <span className="text-accent">{moleculeB}</span>
           </h1>
         </div>
-        <div className="flex flex-wrap gap-2">
-          {EXPORTS.map((f) => (
-            <Button key={f} variant="outline" size="sm" disabled={!done}>
-              <Download className="size-4" />
-              {f}
-            </Button>
-          ))}
-        </div>
+        <ExportButtons reportId={report?.id} disabled={!done} />
       </div>
 
       <div className="grid gap-8 lg:grid-cols-[260px_1fr]">

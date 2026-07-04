@@ -68,5 +68,12 @@ test.describe("authenticated live flow", () => {
     await expect(page.getByRole("heading", { name: "Retrieved Evidence" })).toBeVisible();
     await expect(page.getByRole("heading", { name: "AI Interpretation" })).toBeVisible();
     await expect(page.getByRole("heading", { name: "Clinical Pearls" })).toBeVisible();
+
+    // Exports: clicking a format button downloads a real file.
+    const [download] = await Promise.all([
+      page.waitForEvent("download"),
+      page.getByRole("button", { name: "Markdown" }).click(),
+    ]);
+    expect(download.suggestedFilename()).toMatch(/\.md$/);
   });
 });

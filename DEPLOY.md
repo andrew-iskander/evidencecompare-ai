@@ -23,7 +23,38 @@ offline for free sharing.)
 
 ---
 
-## Step 1 — Deploy the API to Render
+## Step 1 (card-free, recommended) — Deploy the API to Hugging Face Spaces
+
+Render now requires a **credit card on file** even for its free tier. Hugging Face
+Spaces is free, needs **no card**, and runs real Docker containers. Files to paste
+live in `deploy/huggingface/`.
+
+1. Go to **huggingface.co** → **Sign Up** (free, no card).
+2. Top-right avatar → **New Space**.
+   - **Owner**: you · **Space name**: `evidencecompare-api`
+   - **License**: leave default · **Space SDK**: **Docker** → **Blank**
+   - **Hardware**: **CPU basic (free)** · **Visibility**: Public (or Private)
+   - Click **Create Space**.
+3. The Space opens on its **Files** tab. Add the two files from
+   `deploy/huggingface/` in this repo:
+   - Open the existing **`README.md`** → **Edit** → replace its contents with
+     `deploy/huggingface/README.md` → **Commit**.
+   - **Add file → Create a new file** → name it **`Dockerfile`** → paste
+     `deploy/huggingface/Dockerfile` → **Commit**.
+4. The Space auto-builds (**~4–8 min**; watch the **Logs**/**App** tab). When it
+   says **Running**, your API URL is:
+   `https://<your-username>-evidencecompare-api.hf.space`
+5. **Verify:** open `https://<...>.hf.space/health` — you should see JSON with
+   `"evidence_mode": "offline"`.
+
+> Use this URL (with `/api/v1` appended) as `NEXT_PUBLIC_API_BASE_URL` in Step 2.
+> To restrict CORS later (Step 3): Space **Settings → Variables and secrets →
+> New variable** `CORS_ORIGINS` = your Vercel URL. To pull newer code: Space
+> **Settings → Factory rebuild**.
+
+---
+
+## Step 1 (alternative) — Deploy the API to Render (requires a card)
 
 Two ways; the Blueprint is easiest.
 

@@ -2,13 +2,24 @@
 
 import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { AlertTriangle, Download, Loader2 } from "lucide-react";
+import {
+  AlertTriangle,
+  Database,
+  Download,
+  Loader2,
+  Sparkles,
+  Stethoscope,
+} from "lucide-react";
 import { AgentRail } from "@/components/report/agent-rail";
 import { ComparisonTable } from "@/components/report/comparison-table";
 import { FreshnessBar } from "@/components/report/freshness-bar";
 import { TrialDataTable } from "@/components/report/trial-data-table";
 import { EvidenceVisuals } from "@/components/report/evidence-visuals";
 import { SectionCard } from "@/components/report/section-card";
+import {
+  ConflictBanner,
+  TransparencyLayer,
+} from "@/components/report/transparency-layer";
 import { CitationList } from "@/components/report/citation-list";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -161,53 +172,87 @@ export function LiveReportStream({ id }: { id: string }) {
               {done && (
                 <FreshnessBar reportId={report.id} initial={report.freshness} />
               )}
-              <section className="space-y-3">
-                <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-                  Side-by-side comparison
-                </h2>
-                <ComparisonTable
-                  rows={report.comparison}
+
+              {/* Layer 1 — Clinical Summary */}
+              <TransparencyLayer
+                label="Clinical Summary"
+                description="Concise, evidence-grounded takeaways. Derived by AI from the retrieved evidence below."
+                icon={Stethoscope}
+              >
+                {report.sections
+                  .filter((s) => s.layer === "clinical_summary")
+                  .map((section) => (
+                    <SectionCard
+                      key={section.key}
+                      section={section}
+                      citations={report.citations}
+                    />
+                  ))}
+              </TransparencyLayer>
+
+              {/* Layer 2 — Retrieved Evidence (raw facts only) */}
+              <TransparencyLayer
+                label="Retrieved Evidence"
+                description="The raw facts retrieved from trusted sources — verified citations, extracted trial data, and evidence volume. No AI interpretation here."
+                icon={Database}
+              >
+                <ConflictBanner conflicts={report.conflicts} />
+                <div className="space-y-3">
+                  <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+                    Side-by-side comparison
+                  </h3>
+                  <ComparisonTable
+                    rows={report.comparison}
+                    moleculeA={moleculeA}
+                    moleculeB={moleculeB}
+                    citations={report.citations}
+                  />
+                </div>
+                {report.extractions.length > 0 && (
+                  <div className="space-y-3">
+                    <div>
+                      <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+                        Extracted trial data
+                      </h3>
+                      <p className="text-xs text-muted-foreground">
+                        Structured fields pulled from each source by the
+                        Trial-Extraction agent. Empty fields read “Not reported”.
+                      </p>
+                    </div>
+                    <TrialDataTable extractions={report.extractions} />
+                  </div>
+                )}
+                <EvidenceVisuals
                   moleculeA={moleculeA}
                   moleculeB={moleculeB}
                   citations={report.citations}
+                  comparison={report.comparison}
+                  moleculeEvidence={report.moleculeEvidence}
                 />
-              </section>
-              <EvidenceVisuals
-                moleculeA={moleculeA}
-                moleculeB={moleculeB}
-                citations={report.citations}
-                comparison={report.comparison}
-                moleculeEvidence={report.moleculeEvidence}
-              />
-              {report.extractions.length > 0 && (
-                <section className="space-y-3">
-                  <div>
-                    <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-                      Extracted trial data
-                    </h2>
-                    <p className="text-xs text-muted-foreground">
-                      Retrieved evidence — structured fields pulled from each source
-                      by the Trial-Extraction agent. Empty fields read “Not reported”.
-                    </p>
-                  </div>
-                  <TrialDataTable extractions={report.extractions} />
-                </section>
-              )}
-              <section className="space-y-4">
+                <CitationList citations={report.citations} />
+              </TransparencyLayer>
+
+              {/* Layer 3 — AI Interpretation */}
+              <TransparencyLayer
+                label="AI Interpretation"
+                description="AI-synthesized narrative over the retrieved evidence. Every claim links to its citations — this is not medical advice."
+                icon={Sparkles}
+              >
                 <AnimatePresence>
-                  {report.sections.map((section) => (
-                    <motion.div
-                      key={section.key}
-                      layout
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                    >
-                      <SectionCard section={section} citations={report.citations} />
-                    </motion.div>
-                  ))}
+                  {report.sections
+                    .filter((s) => s.layer === "ai_interpretation")
+                    .map((section) => (
+                      <motion.div
+                        key={section.key}
+                        layout
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                      >
+                        <SectionCard section={section} citations={report.citations} />
+                      </motion.div>
+                    ))}
                 </AnimatePresence>
-              </section>
-              <CitationList citations={report.citations} />
+              </TransparencyLayer>
             </>
           ) : (
             <div className="grid place-items-center rounded-lg border border-dashed border-border py-24 text-center text-sm text-muted-foreground">

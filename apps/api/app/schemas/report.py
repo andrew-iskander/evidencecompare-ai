@@ -32,6 +32,7 @@ class SectionOut(BaseModel):
 
     section_key: str
     title: str
+    layer: str = "ai_interpretation"
     confidence: str
     insufficient_evidence: bool = False
     claims: list[ClaimOut] = []
@@ -127,6 +128,7 @@ class ReportOut(BaseModel):
     freshness: str = "unknown"
     freshness_checked_at: datetime | None = None
     cached: bool = False
+    conflicts: list[str] = Field(default_factory=list)
     sections: list[SectionOut] = []
     comparison: list[ComparisonRowOut] = Field(default_factory=list)
     citations: list[CitationOut] = []
@@ -147,6 +149,7 @@ class ReportOut(BaseModel):
             freshness=report.freshness or "unknown",
             freshness_checked_at=report.freshness_checked_at,
             cached=cached,
+            conflicts=report.conflicts or [],
             sections=[SectionOut.model_validate(s) for s in report.sections],
             comparison=[ComparisonRowOut.model_validate(r) for r in report.comparison_rows],
             citations=[CitationOut.model_validate(c) for c in report.citations],

@@ -1,14 +1,17 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
-import { Download, Loader2 } from "lucide-react";
+import { Download, Loader2, Database, Sparkles, Stethoscope } from "lucide-react";
 import { AgentRail } from "@/components/report/agent-rail";
 import { ComparisonTable } from "@/components/report/comparison-table";
 import { TrialDataTable } from "@/components/report/trial-data-table";
 import { EvidenceVisuals } from "@/components/report/evidence-visuals";
 import { SectionCard } from "@/components/report/section-card";
 import { CitationList } from "@/components/report/citation-list";
+import {
+  ConflictBanner,
+  TransparencyLayer,
+} from "@/components/report/transparency-layer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -34,10 +37,9 @@ export function ReportStream({
   const [agents, setAgents] = useState<AgentProgress[]>(() =>
     AGENTS.map((a) => ({ ...a })),
   );
-  const [revealed, setRevealed] = useState(0);
   const [done, setDone] = useState(false);
 
-  // Simulate the streaming pipeline (Phase 1: real SSE lands in Phase 2/3).
+  // Simulate the streaming pipeline (offline demo; real reports use live SSE).
   useEffect(() => {
     let i = 0;
     const timers: ReturnType<typeof setTimeout>[] = [];
@@ -49,14 +51,11 @@ export function ReportStream({
           return { ...a, state: "pending" };
         }),
       );
-      // reveal a section roughly in step with agents
-      setRevealed(Math.min(report.sections.length, Math.max(0, i - 1)));
       i += 1;
       if (i <= AGENTS.length) {
         timers.push(setTimeout(step, 650));
       } else {
         setAgents((prev) => prev.map((a) => ({ ...a, state: "done" })));
-        setRevealed(report.sections.length);
         setDone(true);
       }
     };
@@ -118,64 +117,100 @@ export function ReportStream({
 
         {/* Report body */}
         <div className="space-y-6">
-          <section className="space-y-3">
-            <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-              Side-by-side comparison
-            </h2>
-            <ComparisonTable
-              rows={report.comparison}
-              moleculeA={moleculeA}
-              moleculeB={moleculeB}
-              citations={report.citations}
-            />
-          </section>
-
-          {done && (
-            <EvidenceVisuals
-              moleculeA={moleculeA}
-              moleculeB={moleculeB}
-              citations={report.citations}
-              comparison={report.comparison}
-              moleculeEvidence={report.moleculeEvidence}
-            />
-          )}
-
-          {done && report.extractions.length > 0 && (
+          {!done ? (
             <section className="space-y-3">
-              <div>
-                <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-                  Extracted trial data
-                </h2>
-                <p className="text-xs text-muted-foreground">
-                  Retrieved evidence — structured fields pulled from each source by
-                  the Trial-Extraction agent. Empty fields read “Not reported”.
-                </p>
-              </div>
-              <TrialDataTable extractions={report.extractions} />
-            </section>
-          )}
-
-          <section className="space-y-4">
-            <AnimatePresence>
-              {report.sections.slice(0, revealed).map((section) => (
-                <motion.div
-                  key={section.key}
-                  layout
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                >
-                  <SectionCard section={section} citations={report.citations} />
-                </motion.div>
-              ))}
-            </AnimatePresence>
-            {!done && (
+              <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+                Side-by-side comparison
+              </h2>
+              <ComparisonTable
+                rows={report.comparison}
+                moleculeA={moleculeA}
+                moleculeB={moleculeB}
+                citations={report.citations}
+              />
               <p className="text-center text-sm text-muted-foreground">
-                Synthesizing remaining sections…
+                Synthesizing the evidence report…
               </p>
-            )}
-          </section>
+            </section>
+          ) : (
+            <>
+              {/* Layer 1 — Clinical Summary */}
+              <TransparencyLayer
+                label="Clinical Summary"
+                description="Concise, evidence-grounded takeaways. Derived by AI from the retrieved evidence below."
+                icon={Stethoscope}
+              >
+                {report.sections
+                  .filter((s) => s.layer === "clinical_summary")
+                  .map((section) => (
+                    <SectionCard
+                      key={section.key}
+                      section={section}
+                      citations={report.citations}
+                    />
+                  ))}
+              </TransparencyLayer>
 
-          {done && <CitationList citations={report.citations} />}
+              {/* Layer 2 — Retrieved Evidence */}
+              <TransparencyLayer
+                label="Retrieved Evidence"
+                description="The raw facts retrieved from trusted sources — verified citations, extracted trial data, and evidence volume. No AI interpretation here."
+                icon={Database}
+              >
+                <ConflictBanner conflicts={report.conflicts} />
+                <div className="space-y-3">
+                  <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+                    Side-by-side comparison
+                  </h3>
+                  <ComparisonTable
+                    rows={report.comparison}
+                    moleculeA={moleculeA}
+                    moleculeB={moleculeB}
+                    citations={report.citations}
+                  />
+                </div>
+                {report.extractions.length > 0 && (
+                  <div className="space-y-3">
+                    <div>
+                      <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+                        Extracted trial data
+                      </h3>
+                      <p className="text-xs text-muted-foreground">
+                        Structured fields pulled from each source by the
+                        Trial-Extraction agent. Empty fields read “Not reported”.
+                      </p>
+                    </div>
+                    <TrialDataTable extractions={report.extractions} />
+                  </div>
+                )}
+                <EvidenceVisuals
+                  moleculeA={moleculeA}
+                  moleculeB={moleculeB}
+                  citations={report.citations}
+                  comparison={report.comparison}
+                  moleculeEvidence={report.moleculeEvidence}
+                />
+                <CitationList citations={report.citations} />
+              </TransparencyLayer>
+
+              {/* Layer 3 — AI Interpretation */}
+              <TransparencyLayer
+                label="AI Interpretation"
+                description="AI-synthesized narrative over the retrieved evidence. Every claim links to its citations — this is not medical advice."
+                icon={Sparkles}
+              >
+                {report.sections
+                  .filter((s) => s.layer === "ai_interpretation")
+                  .map((section) => (
+                    <SectionCard
+                      key={section.key}
+                      section={section}
+                      citations={report.citations}
+                    />
+                  ))}
+              </TransparencyLayer>
+            </>
+          )}
         </div>
       </div>
     </div>

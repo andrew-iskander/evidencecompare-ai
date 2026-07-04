@@ -26,6 +26,7 @@ from app.models.report import (
     ReportSection,
     TrialExtraction,
 )
+from app.pipeline.quality import detect_conflicts, layer_for
 
 log = logging.getLogger("pipeline.engine")
 
@@ -138,6 +139,7 @@ async def run_engine(
                 report_id=report.id,
                 section_key=section["section_key"],
                 title=section["title"],
+                layer=layer_for(section["section_key"]),
                 confidence=section["confidence"],
                 insufficient_evidence=section.get("insufficient_evidence", False),
                 claims=section["claims"],
@@ -146,12 +148,15 @@ async def run_engine(
         )
     await db.commit()
 
-    # 5. Provenance + living-evidence fingerprint.
+    # 5. Provenance + living-evidence fingerprint + quality control.
     report.molecule_evidence = state.molecule_evidence
     report.model_synthesis = state.synthesis_model
     report.prompt_version = "orchestrator-v1"
     report.evidence_fingerprint = sorted({d.dedup_key() for d in state.raw_docs})
     report.freshness = "up_to_date"
+    report.conflicts = detect_conflicts(
+        state.extractions, report.molecule_a, report.molecule_b
+    )
     report.source_snapshot = {
         "evidence_mode": settings.evidence_mode,
         "llm_mode": settings.llm_mode,

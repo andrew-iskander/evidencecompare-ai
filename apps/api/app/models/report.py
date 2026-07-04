@@ -44,6 +44,8 @@ class Report(Base):
         DateTime(timezone=True), nullable=True
     )
     evidence_fingerprint: Mapped[list] = mapped_column(JSON, default=list)
+    # Quality control: human-readable notes where retrieved evidence conflicts.
+    conflicts: Mapped[list] = mapped_column(JSON, default=list)
     model_synthesis: Mapped[str | None] = mapped_column(String(64), nullable=True)
     prompt_version: Mapped[str | None] = mapped_column(String(32), nullable=True)
     source_snapshot: Mapped[dict | None] = mapped_column(JSON, nullable=True)
@@ -88,6 +90,8 @@ class ReportSection(Base):
     )
     section_key: Mapped[str] = mapped_column(String(64))
     title: Mapped[str] = mapped_column(String(255))
+    # Transparency layer: retrieved_evidence | ai_interpretation | clinical_summary.
+    layer: Mapped[str] = mapped_column(String(24), default="ai_interpretation")
     confidence: Mapped[str] = mapped_column(String(16), default="moderate")
     insufficient_evidence: Mapped[bool] = mapped_column(Boolean, default=False)
     claims: Mapped[list] = mapped_column(JSON, default=list)  # [{text, citation_ids:[]}]

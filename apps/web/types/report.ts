@@ -54,6 +54,7 @@ export interface Claim {
 
 export type SectionKey =
   | "executive_summary"
+  | "clinical_pearls"
   | "mechanism_of_action"
   | "guidelines"
   | "trials"
@@ -66,9 +67,16 @@ export type SectionKey =
   | "limitations"
   | "evidence_gaps";
 
+/** AI-transparency layer a section belongs to. */
+export type TransparencyLayerKey =
+  | "retrieved_evidence"
+  | "ai_interpretation"
+  | "clinical_summary";
+
 export interface ReportSection {
   key: SectionKey;
   title: string;
+  layer: TransparencyLayerKey;
   confidence: Confidence;
   insufficientEvidence?: boolean;
   claims: Claim[];
@@ -129,6 +137,7 @@ export interface Report {
   freshness: Freshness;
   freshnessCheckedAt?: string;
   cached?: boolean;
+  conflicts: string[];
 }
 
 /** Result of a living-evidence check. */

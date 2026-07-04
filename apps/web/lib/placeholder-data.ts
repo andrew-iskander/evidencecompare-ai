@@ -23,6 +23,7 @@ export const SAMPLE_REPORT: Report = {
   topic: "Cardioprotection",
   costUsd: 0.42,
   freshness: "up_to_date",
+  conflicts: [],
   moleculeEvidence: {
     a: { efficacy: 2, safety: 1, guideline: 1 },
     b: { efficacy: 1, safety: 1, guideline: 1 },
@@ -150,6 +151,7 @@ export const SAMPLE_REPORT: Report = {
     {
       key: "executive_summary",
       title: "Executive Summary",
+      layer: "clinical_summary",
       confidence: "moderate",
       claims: [
         {
@@ -167,8 +169,29 @@ export const SAMPLE_REPORT: Report = {
       ],
     },
     {
+      key: "clinical_pearls",
+      title: "Clinical Pearls",
+      layer: "clinical_summary",
+      confidence: "moderate",
+      claims: [
+        {
+          text: "Highest-tier evidence retrieved for cardioprotection: guideline plus landmark RCTs.",
+          citationIds: ["c3", "c1"],
+        },
+        {
+          text: "No direct head-to-head trial of telmisartan vs valsartan was retrieved — any comparison is cross-trial.",
+          citationIds: [],
+        },
+        {
+          text: "Telmisartan's long half-life favors once-daily 24-hour control; valsartan has the strongest heart-failure trial evidence.",
+          citationIds: ["c1", "c2"],
+        },
+      ],
+    },
+    {
       key: "mechanism_of_action",
       title: "Mechanism of Action",
+      layer: "ai_interpretation",
       confidence: "high",
       claims: [
         {
@@ -184,6 +207,7 @@ export const SAMPLE_REPORT: Report = {
     {
       key: "guidelines",
       title: "Guideline Recommendations",
+      layer: "ai_interpretation",
       confidence: "moderate",
       claims: [
         {
@@ -195,6 +219,7 @@ export const SAMPLE_REPORT: Report = {
     {
       key: "trials",
       title: "Randomized Trials",
+      layer: "ai_interpretation",
       confidence: "high",
       claims: [
         {
@@ -210,6 +235,7 @@ export const SAMPLE_REPORT: Report = {
     {
       key: "safety",
       title: "Safety",
+      layer: "ai_interpretation",
       confidence: "moderate",
       claims: [
         {
@@ -221,6 +247,7 @@ export const SAMPLE_REPORT: Report = {
     {
       key: "evidence_gaps",
       title: "Evidence Gaps",
+      layer: "ai_interpretation",
       confidence: "very_low",
       insufficientEvidence: true,
       claims: [

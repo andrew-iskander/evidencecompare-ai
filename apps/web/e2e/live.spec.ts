@@ -47,7 +47,7 @@ test.describe("authenticated live flow", () => {
 
     // Charts and a verified citation are present.
     await expect(page.getByRole("heading", { name: "Evidence pyramid" })).toBeVisible();
-    await expect(page.getByText(/verified citation/)).toBeVisible();
+    await expect(page.getByText(/verified citations by evidence tier/)).toBeVisible();
 
     // U1: the six-agent pipeline + structured trial extraction render.
     await expect(
@@ -62,5 +62,11 @@ test.describe("authenticated live flow", () => {
     await expect(
       page.getByRole("button", { name: /Refresh evidence/i }),
     ).toBeVisible();
+
+    // U3: the three AI-transparency layers + clinical pearls render.
+    await expect(page.getByRole("heading", { name: "Clinical Summary" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Retrieved Evidence" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "AI Interpretation" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Clinical Pearls" })).toBeVisible();
   });
 });

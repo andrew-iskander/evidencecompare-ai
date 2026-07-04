@@ -86,11 +86,12 @@ SYSTEM_PROMPT = (
     "3. Only use citation ref_keys that appear in the provided evidence list.\n"
     "4. Assign GRADE-inspired confidence (high/moderate/low/very_low) per section and row, "
     "and give each comparison row a one-sentence rationale for its confidence.\n"
-    "5. Cover these sections where evidence allows: executive_summary, mechanism_of_action, "
-    "guidelines, trials, meta_analyses, safety, contraindications, interactions, "
-    "special_populations, limitations, evidence_gaps. A 'direct head-to-head comparison' "
-    "requires a trial comparing the two molecules against each other, not a review that "
-    "merely mentions both."
+    "5. Cover these sections where evidence allows: executive_summary, clinical_pearls, "
+    "mechanism_of_action, guidelines, trials, meta_analyses, safety, contraindications, "
+    "interactions, special_populations, limitations, evidence_gaps. clinical_pearls are "
+    "concise, practical takeaways grounded in the cited evidence. A 'direct head-to-head "
+    "comparison' requires a trial comparing the two molecules against each other, not a "
+    "review that merely mentions both."
 )
 
 
@@ -143,6 +144,7 @@ def offline_synthesize(
                 "claims": summary_claims,
             }
         )
+        sections.append(_clinical_pearls(a, b, t, verified, domains, h2h))
 
     # One section per clinical domain, honestly marked insufficient when empty.
     for key in (
@@ -206,6 +208,59 @@ def offline_synthesize(
         "comparison": comparison,
         "model_used": "offline-extractive",
         "cost_usd": 0.0,
+    }
+
+
+def _clinical_pearls(a: str, b: str, t: str, verified, domains, h2h) -> dict:
+    """Practical, evidence-grounded takeaways for a clinician. Characterizes the
+    retrieved evidence honestly — it does not issue clinical directives."""
+    pearls: list[dict] = []
+    pearls.append(
+        {
+            "text": (
+                f"Highest-tier evidence retrieved for {t}: "
+                f"{top_tier_label(verified).lower()}."
+            ),
+            "citation_ids": _cite(verified[:2]),
+        }
+    )
+    trials = domains["trials"]
+    pearls.append(
+        {
+            "text": (
+                f"Randomized-trial evidence retrieved — {a}: {len(trials.a_docs)} item(s); "
+                f"{b}: {len(trials.b_docs)} item(s)."
+            ),
+            "citation_ids": _cite(trials.docs[:3]),
+        }
+    )
+    pearls.append(
+        {
+            "text": (
+                f"A direct head-to-head trial of {a} vs {b} "
+                + (
+                    "was identified."
+                    if h2h
+                    else "was NOT retrieved — any comparison is cross-trial."
+                )
+            ),
+            "citation_ids": _cite(h2h) if h2h else [],
+        }
+    )
+    guidelines = domains["guidelines"]
+    if guidelines.docs:
+        pearls.append(
+            {
+                "text": f"Guideline coverage relevant to {t} was retrieved for the drug class.",
+                "citation_ids": _cite(guidelines.docs[:2]),
+            }
+        )
+    return {
+        "section_key": "clinical_pearls",
+        "title": "Clinical Pearls",
+        "confidence": confidence_from(verified),
+        "insufficient_evidence": not verified,
+        "claims": pearls,
     }
 
 

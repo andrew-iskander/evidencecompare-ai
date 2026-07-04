@@ -124,6 +124,7 @@ interface RawClaim {
 interface RawSection {
   section_key: string;
   title: string;
+  layer: ReportSection["layer"];
   confidence: ReportSection["confidence"];
   insufficient_evidence: boolean;
   claims: RawClaim[];
@@ -185,6 +186,7 @@ export interface RawReport {
   freshness: Freshness;
   freshness_checked_at: string | null;
   cached: boolean;
+  conflicts: string[];
   sections: RawSection[];
   comparison: RawRow[];
   citations: RawCitation[];
@@ -205,6 +207,7 @@ export function mapReport(raw: RawReport): Report {
       (s): ReportSection => ({
         key: s.section_key as ReportSection["key"],
         title: s.title,
+        layer: s.layer ?? "ai_interpretation",
         confidence: s.confidence,
         insufficientEvidence: s.insufficient_evidence,
         claims: s.claims.map((c) => ({ text: c.text, citationIds: c.citation_ids })),
@@ -256,6 +259,7 @@ export function mapReport(raw: RawReport): Report {
     freshness: raw.freshness ?? "unknown",
     freshnessCheckedAt: raw.freshness_checked_at ?? undefined,
     cached: raw.cached ?? false,
+    conflicts: raw.conflicts ?? [],
   };
 }
 

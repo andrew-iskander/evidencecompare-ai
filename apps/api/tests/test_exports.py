@@ -41,6 +41,38 @@ def fmt_ext(fmt: str) -> str:
     return {"markdown": ".md", "pdf": ".pdf", "xlsx": ".xlsx", "pptx": ".pptx"}[fmt]
 
 
+def test_markdown_includes_v3_sections(client, auth_headers):
+    """The enriched Markdown export surfaces the V3 evidence picture."""
+    rid = _completed_report(client, auth_headers)
+    md = client.get(
+        f"/api/v1/reports/{rid}/download", params={"format": "markdown"}, headers=auth_headers
+    ).text
+    for heading in (
+        "# EvidenceCompare AI",
+        "## At a glance",
+        "## Research question (PICO)",
+        "## Side-by-side comparison",
+        "## Comparative safety matrix",
+        "## References",
+    ):
+        assert heading in md, f"missing section: {heading}"
+
+
+def test_xlsx_has_structured_sheets(client, auth_headers):
+    """The XLSX export is a multi-sheet, structured workbook."""
+    import io
+
+    from openpyxl import load_workbook
+
+    rid = _completed_report(client, auth_headers)
+    content = client.get(
+        f"/api/v1/reports/{rid}/download", params={"format": "xlsx"}, headers=auth_headers
+    ).content
+    wb = load_workbook(io.BytesIO(content))
+    for sheet in ("Overview", "Comparison", "Safety Matrix", "References"):
+        assert sheet in wb.sheetnames, f"missing sheet: {sheet}"
+
+
 def test_download_rejects_bad_format(client, auth_headers):
     rid = _completed_report(client, auth_headers)
     r = client.get(

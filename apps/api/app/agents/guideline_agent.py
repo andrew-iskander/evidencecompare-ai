@@ -88,7 +88,7 @@ class GuidelineAgent(Agent):
 
     async def run(self, state: PipelineState) -> AgentOutcome:
         a, b, t = state.molecule_a, state.molecule_b, state.topic
-        guidelines = [rd for rd in state.verified if rd.doc.study_design == "guideline"]
+        guidelines = [rd for rd in state.ranked if rd.doc.study_design == "guideline"]
         summary = _offline_summary(guidelines, a, b, t)
         model_used: str | None = None
         in_tok = out_tok = 0

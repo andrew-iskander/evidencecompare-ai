@@ -155,7 +155,7 @@ class TrialExtractionAgent(Agent):
 
     async def run(self, state: PipelineState) -> AgentOutcome:
         a, b, t = state.molecule_a, state.molecule_b, state.topic
-        targets = [rd for rd in state.verified if rd.doc.study_design in _TRIAL_DESIGNS][
+        targets = [rd for rd in state.ranked if rd.doc.study_design in _TRIAL_DESIGNS][
             :_MAX_EXTRACT
         ]
         if not targets:

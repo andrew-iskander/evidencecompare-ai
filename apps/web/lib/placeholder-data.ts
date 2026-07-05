@@ -7,12 +7,18 @@ import type { AgentProgress, Report } from "@/types/report";
  */
 
 export const AGENTS: AgentProgress[] = [
+  { key: "interpreter", label: "Clinical-Question Interpreter", state: "pending" },
   { key: "search", label: "Search Agent", state: "pending" },
-  { key: "ranking", label: "Evidence-Ranking Agent", state: "pending" },
-  { key: "extraction", label: "Trial-Extraction Agent", state: "pending" },
   { key: "guideline", label: "Guideline Agent", state: "pending" },
-  { key: "comparison", label: "Comparison Agent", state: "pending" },
+  { key: "extraction", label: "Trial-Extraction Agent", state: "pending" },
+  { key: "ranking", label: "Evidence-Ranking Agent", state: "pending" },
+  { key: "safety", label: "Safety Agent", state: "pending" },
+  { key: "conflict", label: "Conflict-Resolution Agent", state: "pending" },
+  { key: "verification", label: "Citation-Verification Agent", state: "pending" },
   { key: "writer", label: "Medical-Writer Agent", state: "pending" },
+  { key: "visualization", label: "Visualization Agent", state: "pending" },
+  { key: "report", label: "Report-Generator Agent", state: "pending" },
+  { key: "monitor", label: "Continuous-Evidence Monitor", state: "pending" },
 ];
 
 export const SAMPLE_REPORT: Report = {

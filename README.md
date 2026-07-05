@@ -37,12 +37,20 @@ Full rationale: [`docs/02-tech-stack.md`](docs/02-tech-stack.md).
 
 ## Architecture
 
-RAG-grounded, multi-agent evidence engine behind an async API. See
-[`docs/01-architecture.md`](docs/01-architecture.md) and
-[`docs/06-ai-workflow.md`](docs/06-ai-workflow.md) (with Mermaid diagrams).
+RAG-grounded, **multi-agent** evidence engine behind an async API. A central
+orchestrator runs **twelve specialized agents** in dependency-ordered stages
+(independent agents run concurrently) and produces one seamless, fully-cited report.
+See [`docs/07-multi-agent-architecture.md`](docs/07-multi-agent-architecture.md)
+(Mermaid pipeline / agent-interaction / sequence diagrams + per-agent I/O and error
+handling), [`docs/01-architecture.md`](docs/01-architecture.md), and
+[`docs/06-ai-workflow.md`](docs/06-ai-workflow.md).
 
-Eight specialized agents: Search · Guideline · Trial · Meta-analysis · Safety ·
-Evidence Ranking · Citation Verification · Report Generation.
+**V3 twelve-agent pipeline:** Clinical-Question Interpreter → Search → Guideline →
+Trial-Extraction → Evidence-Ranking → Safety → Conflict-Resolution →
+Citation-Verification → Medical-Writer → Visualization → Report-Generator →
+Continuous-Evidence Monitor. An optional **Research Process** panel (hidden by
+default) exposes the pipeline's queries, ranking/verification decisions, safety
+matrix, conflict reconciliation, and per-agent timing.
 
 ## Documentation
 
@@ -55,6 +63,7 @@ Evidence Ranking · Citation Verification · Report Generation.
 | [Database schema](docs/04-database-schema.md) | ER + DDL (pgvector) |
 | [API spec](docs/05-api-specification.md) | REST + SSE |
 | [AI workflow](docs/06-ai-workflow.md) | RAG, agents, model tiering |
+| [Multi-agent engine (V3)](docs/07-multi-agent-architecture.md) | Twelve-agent orchestration, diagrams, per-agent I/O + error handling |
 | [Phase 0 summary](docs/PHASE0-SUMMARY.md) | Decisions log |
 | [Upgrade summary](docs/UPGRADE-SUMMARY.md) | Dynamic AI engine (U1–U4): orchestrator, caching, transparency |
 | [CLAUDE.md](CLAUDE.md) | Dev/agent guide |
@@ -76,6 +85,16 @@ Evidence Ranking · Citation Verification · Report Generation.
 - **U3** — 3-layer AI transparency (Retrieved Evidence / AI Interpretation / Clinical Summary),
   conflicting-evidence flagging, clinical pearls.
 - **U4** — live-mode enablement (`/health` reports live-readiness; `start-app-live.bat`).
+
+**Version 3 — Multi-Agent Medical Research Engine** ✅ ([architecture](docs/07-multi-agent-architecture.md))
+- Central **orchestrator** running **twelve** specialized agents in dependency-ordered,
+  partly-concurrent stages, with structured execution logs + per-agent timings.
+- New agents: Clinical-Question Interpreter (PICO), Safety (comparative matrix),
+  Conflict-Resolution (reconciliation), dedicated Citation-Verification gate,
+  Visualization, Report-Generator, Continuous-Evidence Monitor — alongside the
+  repurposed Search (ranked study list) and Evidence-Ranking (scoring) agents.
+- Optional **Research Process** transparency panel (hidden by default). Backward
+  compatible with V2 (additive nullable columns; offline engine still deterministic).
 
 ## Getting started
 
@@ -107,7 +126,7 @@ cd apps/web && npm install && npm run dev
 ### Tests
 
 ```bash
-cd apps/api && pytest                    # 40 backend tests (offline, deterministic)
+cd apps/api && pytest                    # 51 backend tests (offline, deterministic)
 cd apps/web && npm run build && npm run test:e2e   # Playwright e2e + axe accessibility
 ```
 

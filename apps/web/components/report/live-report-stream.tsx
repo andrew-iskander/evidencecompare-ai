@@ -10,6 +10,7 @@ import { ExportButtons } from "@/components/report/export-buttons";
 import { TrialDataTable } from "@/components/report/trial-data-table";
 import { EvidenceVisuals } from "@/components/report/evidence-visuals";
 import { SectionCard } from "@/components/report/section-card";
+import { ResearchProcessPanel } from "@/components/report/research-process-panel";
 import {
   ConflictBanner,
   TransparencyLayer,
@@ -156,6 +157,9 @@ export function LiveReportStream({ id }: { id: string }) {
               {done && (
                 <FreshnessBar reportId={report.id} initial={report.freshness} />
               )}
+
+              {/* Transparency Mode — hidden by default, opt-in for advanced users */}
+              <ResearchProcessPanel report={report} />
 
               {/* Layer 1 — Clinical Summary */}
               <TransparencyLayer

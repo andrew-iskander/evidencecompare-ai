@@ -11,12 +11,20 @@ export type ReportStatus = "queued" | "running" | "complete" | "failed";
 export type Freshness = "up_to_date" | "update_available" | "unknown";
 
 export type AgentKey =
+  | "interpreter"
   | "search"
-  | "ranking"
-  | "extraction"
   | "guideline"
-  | "comparison"
-  | "writer";
+  | "extraction"
+  | "ranking"
+  | "safety"
+  | "conflict"
+  | "verification"
+  | "writer"
+  | "visualization"
+  | "report"
+  | "monitor"
+  // legacy V2 key, kept so old reports still map cleanly
+  | "comparison";
 
 export type AgentState = "pending" | "running" | "done" | "error";
 
@@ -64,7 +72,9 @@ export type SectionKey =
   | "contraindications"
   | "interactions"
   | "special_populations"
+  | "evidence_ranking"
   | "limitations"
+  | "research_gaps"
   | "evidence_gaps";
 
 /** AI-transparency layer a section belongs to. */
@@ -122,6 +132,60 @@ export interface MoleculeEvidence {
   b: MoleculeEvidenceSide;
 }
 
+/**
+ * V3 multi-agent artifacts. These are passed through from the backend in their
+ * native (snake_case) JSON shape and rendered by the Research-Process panel; they
+ * are optional so legacy V2 reports (which lack them) still map cleanly.
+ */
+export interface AgentLogEntry {
+  agent: string;
+  label: string;
+  model?: string | null;
+  state: string;
+  detail: string;
+  cost_usd: number;
+  input_tokens: number;
+  output_tokens: number;
+  ms: number;
+}
+
+export interface ResearchProcess {
+  logs: AgentLogEntry[];
+  timings: Record<string, number>;
+  snapshot: Record<string, unknown>;
+  verification?: {
+    checked: number;
+    verified: number;
+    removed: number;
+    broken: Array<Record<string, unknown>>;
+  } | null;
+}
+
+export interface EvidenceScores {
+  overall: Record<string, number | string | Record<string, number>>;
+  studies: Array<Record<string, number | string | null>>;
+}
+
+export interface SafetyCell {
+  status: "reported" | "not_reported";
+  citation_ids: string[];
+  note: string;
+}
+
+export interface SafetyMatrix {
+  molecule_a: string;
+  molecule_b: string;
+  rows: Array<{ key: string; label: string; a: SafetyCell; b: SafetyCell }>;
+}
+
+export interface Reconciliation {
+  has_conflict: boolean;
+  notes: string[];
+  explanations: Array<{ molecule: string; axes: string[]; text: string }>;
+  summary: string;
+  consistency_score?: number | null;
+}
+
 export interface Report {
   id: string;
   status: ReportStatus;
@@ -138,6 +202,11 @@ export interface Report {
   freshnessCheckedAt?: string;
   cached?: boolean;
   conflicts: string[];
+  // V3 multi-agent artifacts (optional; present on V3 reports).
+  scores?: EvidenceScores;
+  safetyMatrix?: SafetyMatrix;
+  reconciliation?: Reconciliation;
+  researchProcess?: ResearchProcess;
 }
 
 /** Result of a living-evidence check. */

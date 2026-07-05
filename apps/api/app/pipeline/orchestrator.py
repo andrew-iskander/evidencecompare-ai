@@ -68,8 +68,8 @@ async def run_pipeline(report_id: uuid.UUID) -> None:
                 if state == "running":
                     run.state = "running"
                     run.started_at = _now()
-                elif state == "done":
-                    run.state = "done"
+                elif state in ("done", "error"):
+                    run.state = state
                     run.detail = detail
                     run.cost_usd = round(cost, 4)
                     run.input_tokens = input_tokens

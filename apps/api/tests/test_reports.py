@@ -57,6 +57,40 @@ def test_report_lifecycle(client, auth_headers):
     assert set(me["b"]) == {"efficacy", "safety", "guideline"}
 
 
+def test_report_exposes_v3_multi_agent_artifacts(client, auth_headers):
+    """The API surfaces the twelve-agent artifacts + Transparency payload."""
+    created = _create_report(client, auth_headers)
+    body = client.get(f"/api/v1/reports/{created['id']}", headers=auth_headers).json()
+    assert body["status"] == "complete"
+
+    # Twelve agents ran, in the V3 spec order.
+    assert [a["agent"] for a in body["agents"]] == [
+        "interpreter", "search", "guideline", "extraction", "ranking", "safety",
+        "conflict", "verification", "writer", "visualization", "report", "monitor",
+    ]
+
+    # Interpreter research plan (PICO) is present.
+    assert body["research_plan"]["pico"]["intervention"] == "Telmisartan"
+
+    # Evidence scoring (overall + per-study) is present and in range.
+    overall = body["scores"]["overall"]
+    assert 0 <= overall["evidence_score"] <= 100
+    assert overall["confidence"] in {"high", "moderate", "low", "very_low"}
+
+    # Comparative safety matrix references only verified citations.
+    ref_keys = {c["ref_key"] for c in body["citations"]}
+    for row in body["safety_matrix"]["rows"]:
+        for side in ("a", "b"):
+            assert set(row[side]["citation_ids"]) <= ref_keys
+
+    # Conflict reconciliation + Transparency "Research Process" payload.
+    assert "has_conflict" in body["reconciliation"]
+    rp = body["research_process"]
+    assert len(rp["logs"]) == 12
+    assert rp["verification"]["verified"] == len(body["citations"])
+    assert rp["snapshot"]["queries"]
+
+
 def test_report_list(client, auth_headers):
     _create_report(client, auth_headers)
     r = client.get("/api/v1/reports", headers=auth_headers)

@@ -30,6 +30,27 @@ Monorepo. See `docs/03-folder-structure.md`.
 | `docs/04-database-schema.md` | ER diagram + DDL (pgvector) |
 | `docs/05-api-specification.md` | REST + SSE endpoints |
 | `docs/06-ai-workflow.md` | RAG pipeline, agents, model selection, anti-hallucination |
+| `docs/07-multi-agent-architecture.md` | **V3** twelve-agent orchestration: diagrams, per-agent I/O + error handling |
+
+## Multi-agent engine (V3 — IMPORTANT)
+
+Every search runs through the **AI Orchestrator** (`apps/api/app/agents/orchestrator.py`),
+which coordinates **twelve** specialist agents over a shared `PipelineState` and
+emits progress/logs/timings; persistence stays in `pipeline/engine.py`.
+
+- Agents live in `apps/api/app/agents/` (`interpreter`, `search`, `guideline`,
+  `extraction`, `ranking`, `safety`, `conflict`, `verification`, `writer`,
+  `visualization`, `report`, `monitor`). Each subclasses `agents.base.Agent`,
+  implements `async run(state)`, returns an `AgentOutcome`, and has **both** a
+  live-LLM path and a **deterministic offline fallback** (so `pytest` runs keyless).
+- Execution is a list of dependency-ordered **stages** (`orchestrator.DEFAULT_PLAN`);
+  independent agents in a stage run concurrently. Agents must **not** touch the DB
+  (only the orchestrator's progress callback does) — keep them pure over `state`.
+- Add a new capability as a **new agent/stage**; don't fold it into an existing one.
+  Keep the anti-hallucination rules below intact (verification is a dedicated agent).
+- New report artifacts are additive nullable JSON columns (see the latest Alembic
+  migration) and surface via `ReportOut` + the frontend Research-Process panel.
+- Full design + diagrams: `docs/07-multi-agent-architecture.md`.
 
 ## AI / LLM conventions (IMPORTANT)
 

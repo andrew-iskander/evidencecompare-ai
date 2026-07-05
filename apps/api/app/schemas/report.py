@@ -115,6 +115,15 @@ class MoleculeEvidenceOut(BaseModel):
     b: MoleculeEvidenceSide
 
 
+class ResearchProcessOut(BaseModel):
+    """Transparency payload for the optional "Research Process" panel."""
+
+    logs: list[dict] = Field(default_factory=list)  # per-agent execution log
+    timings: dict = Field(default_factory=dict)  # agent_key -> ms
+    snapshot: dict = Field(default_factory=dict)  # queries, counts, research plan
+    verification: dict | None = None  # checked / verified / removed
+
+
 class ReportOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
@@ -135,9 +144,24 @@ class ReportOut(BaseModel):
     extractions: list[TrialExtractionOut] = Field(default_factory=list)
     agents: list[AgentRunOut] = Field(default_factory=list)
     molecule_evidence: MoleculeEvidenceOut | None = None
+    # V3 multi-agent artifacts (present on V3 reports; null on legacy V2 reports).
+    research_plan: dict | None = None
+    scores: dict | None = None
+    safety_matrix: dict | None = None
+    reconciliation: dict | None = None
+    visualizations: dict | None = None
+    research_process: ResearchProcessOut | None = None
 
     @classmethod
     def from_report(cls, report, cached: bool = False) -> ReportOut:
+        research_process = None
+        if getattr(report, "agent_logs", None) or getattr(report, "source_snapshot", None):
+            research_process = ResearchProcessOut(
+                logs=report.agent_logs or [],
+                timings=report.agent_timings or {},
+                snapshot=report.source_snapshot or {},
+                verification=getattr(report, "verification", None),
+            )
         return cls(
             id=report.id,
             status=report.status,
@@ -160,6 +184,12 @@ class ReportOut(BaseModel):
                 if report.molecule_evidence
                 else None
             ),
+            research_plan=getattr(report, "research_plan", None),
+            scores=getattr(report, "evidence_scores", None),
+            safety_matrix=getattr(report, "safety_matrix", None),
+            reconciliation=getattr(report, "reconciliation", None),
+            visualizations=getattr(report, "visualizations", None),
+            research_process=research_process,
         )
 
 

@@ -65,15 +65,19 @@ def _evidence_ranking_section(state: PipelineState) -> dict:
     }
 
 
-def _research_gaps_section(state: PipelineState, existing: dict | None) -> dict:
-    claims = list(existing["claims"]) if existing else []
+def _research_gaps_section(state: PipelineState) -> dict:
+    """Forward-looking gaps: unresolved conflicts + where new evidence is needed.
+
+    Complements (does not duplicate) the writer's Evidence-Gaps section, which owns
+    the direct head-to-head gap.
+    """
     recon = state.reconciliation or {}
-    for note in recon.get("notes", []):
-        claims.append({"text": note, "citation_ids": []})
+    claims = [{"text": note, "citation_ids": []} for note in recon.get("notes", [])]
     if not claims:
         claims = [{
-            "text": "No specific evidence gaps beyond the limits of the retrieved set "
-                    "were flagged.",
+            "text": "No conflicting evidence was detected; the main gap is the absence "
+                    "of direct head-to-head data (see Evidence Gaps). Adequately powered "
+                    "comparative trials would strengthen certainty.",
             "citation_ids": [],
         }]
     return {
@@ -106,9 +110,9 @@ class ReportGeneratorAgent(Agent):
         if "evidence_ranking" not in by_key:
             sections.append(_evidence_ranking_section(state))
 
-        # Fold the writer's evidence_gaps + conflict reconciliation into Research Gaps.
+        # Add a forward-looking Research-Gaps section (complements Evidence Gaps).
         if "research_gaps" not in by_key:
-            sections.append(_research_gaps_section(state, by_key.get("evidence_gaps")))
+            sections.append(_research_gaps_section(state))
 
         # Canonical ordering (stable for keys not in the list).
         order_index = {k: i for i, k in enumerate(_ORDER)}

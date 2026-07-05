@@ -51,6 +51,16 @@ class Report(Base):
     source_snapshot: Mapped[dict | None] = mapped_column(JSON, nullable=True)
     # Per-molecule evidence counts by macro-domain, for the risk-benefit matrix.
     molecule_evidence: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+    # V3 multi-agent artifacts (all nullable; V2 reports simply leave them empty).
+    research_plan: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+    evidence_scores: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+    safety_matrix: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+    reconciliation: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+    visualizations: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+    verification: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+    # Orchestrator execution logs + per-agent timings (Transparency panel).
+    agent_logs: Mapped[list | None] = mapped_column(JSON, nullable=True)
+    agent_timings: Mapped[dict | None] = mapped_column(JSON, nullable=True)
     token_cost_usd: Mapped[float] = mapped_column(Numeric(10, 4), default=0)
     error: Mapped[str | None] = mapped_column(Text, nullable=True)
     share_token: Mapped[str | None] = mapped_column(String(64), nullable=True, index=True)

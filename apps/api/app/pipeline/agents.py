@@ -1,18 +1,16 @@
-"""Agent roster for the multi-agent evidence orchestrator.
+"""Agent roster for the multi-agent evidence orchestrator (V3).
 
 Keys and order match `app.agents.orchestrator.DEFAULT_AGENTS`; the pipeline
 pre-creates one AgentRun row per entry (pending) so the UI shows the full
-six-agent pipeline before work starts, then the orchestrator advances each.
+twelve-agent pipeline before work starts, then the orchestrator advances each.
 """
 
 from __future__ import annotations
 
-# (key, label, model tier). Order == execution + display order.
+from app.agents.orchestrator import DEFAULT_AGENTS
+
+# (key, label, model tier). Order == execution + display order. Derived from the
+# orchestrator's agent list so the roster can never drift out of sync with it.
 AGENT_ROSTER: list[tuple[str, str, str]] = [
-    ("search", "Search Agent", "claude-sonnet-5"),
-    ("ranking", "Evidence-Ranking Agent", "claude-haiku-4-5"),
-    ("extraction", "Trial-Extraction Agent", "claude-haiku-4-5"),
-    ("guideline", "Guideline Agent", "claude-sonnet-5"),
-    ("comparison", "Comparison Agent", "claude-sonnet-5"),
-    ("writer", "Medical-Writer Agent", "claude-opus-4-8"),
+    (a.key, a.label, a.model or "deterministic") for a in DEFAULT_AGENTS
 ]

@@ -47,21 +47,47 @@ class PipelineState:
     ranked: list[RankedDoc] = field(default_factory=list)
     verified: list[RankedDoc] = field(default_factory=list)
 
+    # Clinical-question interpreter (PICO + expanded search terms)
+    research_plan: dict | None = None
+
     # Trial-extraction agent (structured per-study records)
     extractions: list[dict] = field(default_factory=list)
 
     # Guideline agent
     guideline_summary: dict | None = None
 
+    # Evidence-ranking (scoring) agent: overall + per-study quality scores
+    scores: dict = field(default_factory=dict)
+
+    # Safety agent: comparative safety matrix
+    safety_matrix: dict | None = None
+
+    # Conflict-resolution agent: evidence reconciliation summary
+    reconciliation: dict | None = None
+    conflicts: list[str] = field(default_factory=list)
+
+    # Citation-verification agent: verification report (checked/broken/removed)
+    verification: dict = field(default_factory=dict)
+
     # Comparison + writer agents
     comparison: list[dict] = field(default_factory=list)
     sections: list[dict] = field(default_factory=list)
     molecule_evidence: dict = field(default_factory=dict)
 
+    # Visualization agent: precomputed payloads for the frontend charts
+    visualizations: dict = field(default_factory=dict)
+
+    # Continuous-evidence monitor: living-evidence fingerprint + freshness verdict
+    fingerprint: list[str] = field(default_factory=list)
+    freshness: str = "unknown"
+
     # Provenance / transparency
     synthesis_model: str = "offline-extractive"
     cost_usd: float = 0.0
     snapshot: dict = field(default_factory=dict)
+    # Orchestrator execution logs (one structured entry per agent) + timings (ms).
+    logs: list[dict] = field(default_factory=list)
+    timings: dict[str, float] = field(default_factory=dict)
 
 
 @dataclass

@@ -148,15 +148,28 @@ async def run_engine(
         )
     await db.commit()
 
-    # 5. Provenance + living-evidence fingerprint + quality control.
+    # 5. Provenance + living-evidence fingerprint + quality control + V3 artifacts.
     report.molecule_evidence = state.molecule_evidence
     report.model_synthesis = state.synthesis_model
-    report.prompt_version = "orchestrator-v1"
-    report.evidence_fingerprint = sorted({d.dedup_key() for d in state.raw_docs})
-    report.freshness = "up_to_date"
-    report.conflicts = detect_conflicts(
+    report.prompt_version = "orchestrator-v3"
+    # Living-evidence baseline + conflicts now come from the Monitor/Conflict agents
+    # (fall back to deterministic computation if an agent was skipped).
+    report.evidence_fingerprint = state.fingerprint or sorted(
+        {d.dedup_key() for d in state.raw_docs}
+    )
+    report.freshness = state.freshness or "up_to_date"
+    report.conflicts = state.conflicts or detect_conflicts(
         state.extractions, report.molecule_a, report.molecule_b
     )
+    # V3 multi-agent artifacts.
+    report.research_plan = state.research_plan
+    report.evidence_scores = state.scores or None
+    report.safety_matrix = state.safety_matrix
+    report.reconciliation = state.reconciliation
+    report.visualizations = state.visualizations or None
+    report.verification = state.verification or None
+    report.agent_logs = state.logs or None
+    report.agent_timings = state.timings or None
     report.source_snapshot = {
         "evidence_mode": settings.evidence_mode,
         "llm_mode": settings.llm_mode,
@@ -165,6 +178,7 @@ async def run_engine(
         "verified": len(state.verified),
         "extractions": len(state.extractions),
         "queries": state.queries,
+        "research_plan": state.research_plan,
     }
     await db.commit()
 

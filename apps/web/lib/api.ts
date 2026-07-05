@@ -2,10 +2,14 @@ import type {
   AgentProgress,
   Citation,
   ComparisonRow,
+  EvidenceScores,
   Freshness,
   FreshnessResult,
+  Reconciliation,
   Report,
   ReportSection,
+  ResearchProcess,
+  SafetyMatrix,
   TrialExtraction,
 } from "@/types/report";
 
@@ -193,6 +197,11 @@ export interface RawReport {
   extractions: RawExtraction[];
   agents: RawAgent[];
   molecule_evidence: RawMoleculeEvidence | null;
+  // V3 multi-agent artifacts (null on legacy V2 reports).
+  scores: EvidenceScores | null;
+  safety_matrix: SafetyMatrix | null;
+  reconciliation: Reconciliation | null;
+  research_process: ResearchProcess | null;
 }
 
 export function mapReport(raw: RawReport): Report {
@@ -260,6 +269,11 @@ export function mapReport(raw: RawReport): Report {
     freshnessCheckedAt: raw.freshness_checked_at ?? undefined,
     cached: raw.cached ?? false,
     conflicts: raw.conflicts ?? [],
+    // V3 multi-agent artifacts pass through in their native JSON shape.
+    scores: raw.scores ?? undefined,
+    safetyMatrix: raw.safety_matrix ?? undefined,
+    reconciliation: raw.reconciliation ?? undefined,
+    researchProcess: raw.research_process ?? undefined,
   };
 }
 
